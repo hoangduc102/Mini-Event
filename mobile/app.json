@@ -36,6 +36,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/onboarding1.png",
+      "assets/onboarding2.png",
+      "assets/onboarding3.png"
+    ]
   }
 }

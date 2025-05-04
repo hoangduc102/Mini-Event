@@ -6,13 +6,56 @@ import { Link } from 'expo-router';
 import styles from '../../assets/styles/home.styles';
 import COLORS from '../../constants/colors';
 import ResponsiveInfo from '../../components/ResponsiveInfo';
+import { useState } from 'react';
 
 export default function Home() {
   const { user } = useAuthStore();
+  const [showAllEvents, setShowAllEvents] = useState(false);
+
+  const upcomingEvents = [
+    {
+      id: 1,
+      day: '15',
+      month: 'APR',
+      title: 'Tech Conference 2024',
+      location: 'District 1, HCMC',
+      attendees: '150',
+      time: '09:00 AM'
+    },
+    {
+      id: 2,
+      day: '15',
+      month: 'APR',
+      title: 'Tech Conference 2024',
+      location: 'District 1, HCMC',
+      attendees: '150',
+      time: '09:00 AM'
+    },
+    {
+      id: 3,
+      day: '20',
+      month: 'APR',
+      title: 'Design Workshop 2024',
+      location: 'District 2, HCMC',
+      attendees: '80',
+      time: '14:00 PM'
+    },
+    {
+      id: 4,
+      day: '25',
+      month: 'APR',
+      title: 'Startup Meetup 2024',
+      location: 'District 3, HCMC',
+      attendees: '120',
+      time: '10:00 AM'
+    }
+  ];
+
+  const displayedEvents = showAllEvents ? upcomingEvents : upcomingEvents.slice(0, 2);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <ResponsiveInfo />
+      {/* <ResponsiveInfo /> */}
       {/* Header Section */}
       <View style={styles.header}>
         <View style={styles.userInfo}>
@@ -81,31 +124,42 @@ export default function Home() {
           </TouchableOpacity>
         </View>
 
-        {[1, 2].map((item) => (
-          <TouchableOpacity key={item} style={styles.upcomingEventCard}>
+        {displayedEvents.map((event) => (
+          <TouchableOpacity key={event.id} style={styles.upcomingEventCard}>
             <View style={styles.upcomingEventDate}>
-              <Text style={styles.upcomingEventDay}>15</Text>
-              <Text style={styles.upcomingEventMonth}>APR</Text>
+              <Text style={styles.upcomingEventDay}>{event.day}</Text>
+              <Text style={styles.upcomingEventMonth}>{event.month}</Text>
             </View>
             <View style={styles.upcomingEventInfo}>
-              <Text style={styles.upcomingEventTitle}>Tech Conference 2024</Text>
+              <Text style={styles.upcomingEventTitle}>{event.title}</Text>
               <Text style={styles.upcomingEventLocation}>
                 <Ionicons name="location-outline" size={14} color="#666" />
-                {' District 1, HCMC'}
+                {' ' + event.location}
               </Text>
               <View style={styles.upcomingEventStats}>
                 <Text style={styles.upcomingEventAttendees}>
                   <Ionicons name="people-outline" size={14} color="#666" />
-                  {' 150 Attendees'}
+                  {' ' + event.attendees + ' Attendees'}
                 </Text>
                 <Text style={styles.upcomingEventTime}>
                   <Ionicons name="time-outline" size={14} color="#666" />
-                  {' 09:00 AM'}
+                  {' ' + event.time}
                 </Text>
               </View>
             </View>
           </TouchableOpacity>
         ))}
+
+        <TouchableOpacity 
+          style={styles.showMoreButton}
+          onPress={() => setShowAllEvents(!showAllEvents)}
+        >
+          <MaterialIcons 
+            name={showAllEvents ? "keyboard-arrow-up" : "keyboard-arrow-down"} 
+            size={24} 
+            color="#666" 
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Create Event Section */}

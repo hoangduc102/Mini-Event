@@ -351,6 +351,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginRight: 8,
   },
+  showMoreButton: {
+    // alignItems: 'center',
+    // paddingVertical: 10,
+    //backgroundColor: '#FFF',
+    // borderRadius: 12,
+    // marginTop: 5,
+    // shadowColor: '#000',
+    // shadowOffset: {
+    //   width: 0,
+    //   height: 2,
+    // },
+    //shadowOpacity: 0.1,
+    //shadowRadius: 4,
+    //elevation: 3,
+    //width: '40%',
+    alignSelf: 'center',
+  },
 });
 
 export default styles;
