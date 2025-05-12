@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore'
 
 export default function Signup() {
   const [username, setUsername] = useState('')
+  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -19,7 +20,7 @@ export default function Signup() {
   const router = useRouter()
 
   const handleSignup = async () => {
-    const result = await register(username, email, password)
+    const result = await register(username, phone, email, password)
 
     if (!result.success) {
       Alert.alert('Error', result.error)
@@ -55,6 +56,25 @@ export default function Signup() {
                 placeholderTextColor={COLORS.placeholderText}
                 value={username}
                 onChangeText={setUsername}
+              />
+            </View>
+          </View>
+
+          {/*PHONE INPUT*/}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons 
+              name='phone-portrait-outline' 
+              size={20} 
+              color={COLORS.primary} 
+              style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder='Enter your phone'
+                placeholderTextColor={COLORS.placeholderText}
+                value={phone}
+                onChangeText={setPhone}
               />
             </View>
           </View>

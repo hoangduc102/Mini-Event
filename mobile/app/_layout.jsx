@@ -1,54 +1,58 @@
-import { Stack, useRouter ,useSegments} from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import SafeScreen from "../components/SafeScreen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
-
-
-  const {checkAuth, user, token} = useAuthStore();
-
+  const [isReady, setIsReady] = useState(false);
+  const { checkAuth, user, token } = useAuthStore();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  // Kiểm tra xem người dùng đã xem onboarding chưa
-  useEffect(() => {
-    const checkOnboarding = async () => {
+    const initialize = async () => {
       try {
+        await checkAuth();
         const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
+        
         if (!hasSeenOnboarding) {
           router.replace("/(onboarding)");
           await AsyncStorage.setItem('hasSeenOnboarding', 'true');
         }
+        setIsReady(true);
       } catch (error) {
-        console.error('Error checking onboarding status:', error);
+        console.error('Error during initialization:', error);
+        setIsReady(true);
       }
     };
-    checkOnboarding();
+
+    initialize();
   }, []);
 
-  //handle navigation based on the auth state
   useEffect(() => {
+    if (!isReady) return;
+
     const inAuthScreen = segments[0] === "(auth)";
     const isSignedIn = user && token;
 
-    if(!isSignedIn && !inAuthScreen){
+    if (!isSignedIn && !inAuthScreen) {
       router.replace("/(auth)");
-    }else if(isSignedIn && inAuthScreen){
+    } else if (isSignedIn && inAuthScreen) {
       router.replace("/(tabs)");
     }
-  }, [user, token, segments]);
+  }, [user, token, segments, isReady]);
+
+  if (!isReady) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <SafeScreen>
-        <Stack screenOptions={{headerShown : false}}>
+        <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(onboarding)" />

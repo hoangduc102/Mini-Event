@@ -1,24 +1,27 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
+const API_BASE_URL = 'http://localhost/v1'
+
 export const useAuthStore = create((set) => ({
   user: null,
   token: null,
   isLoading: false,
 
-  register: async (username, email, password) => {
+  register: async (username, phone, email, password) => {
     set({ isLoading: true });
     try {
-      const response = await fetch('https://react-native-minievent.onrender.com/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
-          username, 
-          email, 
+          username,
+          phone,
+          email,
           password
-         })
+        })
       })
 
       const data = await response.json()
@@ -66,7 +69,7 @@ export const useAuthStore = create((set) => ({
   login: async (email, password) => {
     set({isLoading: true});
     try{
-      const response = await fetch('https://react-native-minievent.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/users/login`, {
         method : 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -86,6 +89,9 @@ export const useAuthStore = create((set) => ({
 
       set({user: data.user, token: data.token, isLoading: false});
       
+      return {
+        success: true,
+      }
     }catch(error){
       set({isLoading: false});
       return {
@@ -94,5 +100,32 @@ export const useAuthStore = create((set) => ({
       }
     }
   },
+
+  getUserInfo: async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+
+      const response = await fetch(`${API_BASE_URL}/users/info`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+
+      set({ user: data });
+      return { success: true, user: data };
+    } catch (error) {
+      console.log('Get user info error:', error);
+      return {
+        success: false,
+        error: error.message || "Something went wrong",
+      }
+    }
+  }
 }))
 

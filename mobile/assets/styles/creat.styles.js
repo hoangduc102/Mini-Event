@@ -186,6 +186,8 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 4,
     marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkboxChecked: {
     backgroundColor: '#000',
@@ -238,6 +240,27 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     color: '#fff',
+  },
+  mapHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: '#fff',
+    zIndex: 100,
+    height: 56, // hoặc 60
+  },
+  mapContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingTop: 8,
+  },
+  mapTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
   },
 });
 

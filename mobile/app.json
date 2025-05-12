@@ -9,13 +9,31 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.mobile",
+      "config": {
+        "googleMapsApiKey": "AIzaSyAjH6ZuQvkrphHcMD0dzDpSWYFqv6t7_uc"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Ứng dụng cần truy cập vị trí của bạn để hiển thị bản đồ và chọn địa điểm.",
+        "NSLocationAlwaysUsageDescription": "Ứng dụng cần truy cập vị trí của bạn để hiển thị bản đồ và chọn địa điểm."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.svg",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.yourcompany.mobile",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAjH6ZuQvkrphHcMD0dzDpSWYFqv6t7_uc"
+        }
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -31,6 +49,12 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Ứng dụng cần truy cập vị trí của bạn để hiển thị bản đồ và chọn địa điểm."
         }
       ]
     ],

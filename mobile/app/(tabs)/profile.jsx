@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView } from 'react-native';
 import { useAuthStore } from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../../assets/styles/profile.styles';
@@ -9,7 +9,7 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerBackground} />
-      <View style={styles.contentContainer}>
+      <ScrollView style={styles.contentContainer}>
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
@@ -73,9 +73,10 @@ export default function Profile() {
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

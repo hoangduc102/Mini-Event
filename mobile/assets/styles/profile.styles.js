@@ -150,9 +150,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff4757',
     padding: 16,
     borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 20,
-    marginHorizontal: 20,
+    marginBottom: 20,
     shadowColor: '#ff4757',
     shadowOffset: {
       width: 0,
@@ -166,6 +168,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 8,
   },
 });
 
