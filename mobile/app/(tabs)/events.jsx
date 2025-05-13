@@ -1,32 +1,42 @@
-import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native'
+import { View, Text, Image, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native'
 import React, { useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
+import { styles } from '../../assets/styles/event.styles'
 
-const EventCard = ({ title, date, location }) => (
-  <View style={{ flexDirection: 'row', padding: 10, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+const COLORS = {
+  primary: '#4F46E5',
+  secondary: '#64748B',
+  text: '#1E293B',
+}
+
+const StatusBadge = ({ status }) => (
+  <View style={[
+    styles.statusBadge,
+    status === 'upcoming' ? styles.upcomingBadge : styles.completedBadge
+  ]}>
+    <Text style={styles.statusBadgeText}>
+      {status === 'upcoming' ? 'Upcoming' : 'Completed'}
+    </Text>
+  </View>
+)
+
+const EventCard = ({ title, date, location, status }) => (
+  <View style={styles.eventCard}>
     <Image 
       source={require('../../assets/images/App-logo.png')}
-      style={{ width: 80, height: 80, borderRadius: 10 }}
+      style={styles.eventImage}
     />
-    <View style={{ marginLeft: 15, flex: 1 }}>
-      <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{title}</Text>
-      <Text style={{ color: '#666', marginTop: 5 }}>{date}</Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
-        <Ionicons name="location-outline" size={16} color="#666" />
-        <Text style={{ color: '#666', marginLeft: 5 }}>{location}</Text>
+    <View style={styles.eventInfo}>
+      {status && <StatusBadge status={status} />}
+      <Text style={styles.eventTitle} numberOfLines={2}>{title}</Text>
+      <Text style={styles.eventDate}>{date}</Text>
+      <View style={styles.locationContainer}>
+        <Ionicons name="location-outline" size={16} color={COLORS.secondary} />
+        <Text style={styles.locationText} numberOfLines={1}>{location}</Text>
       </View>
     </View>
-    <TouchableOpacity 
-      style={{ 
-        padding: 8, 
-        borderRadius: 5, 
-        borderWidth: 1, 
-        borderColor: '#000',
-        height: 35,
-        justifyContent: 'center'
-      }}
-    >
-      <Text style={{ fontSize: 12 }}>SHOW DETAIL</Text>
+    <TouchableOpacity style={styles.showDetailButton}>
+      <Text style={styles.showDetailText}>VIEW</Text>
     </TouchableOpacity>
   </View>
 )
@@ -43,62 +53,43 @@ const EventSection = ({ title, events, type }) => {
     <View style={{ marginBottom: 20 }}>
       <TouchableOpacity 
         onPress={() => setIsExpanded(!isExpanded)}
-        style={{ 
-          flexDirection: 'row', 
-          alignItems: 'center',
-          paddingVertical: 15,
-          paddingHorizontal: 10,
-          borderBottomWidth: 1,
-          borderBottomColor: '#eee'
-        }}
+        style={styles.sectionHeader}
       >
-        <Text style={{ fontSize: 18, fontWeight: 'bold', flex: 1 }}>{title}</Text>
+        <Text style={styles.sectionTitle}>{title}</Text>
         <Ionicons 
           name={isExpanded ? "chevron-up" : "chevron-down"} 
           size={24} 
-          color="black" 
+          color={COLORS.text}
         />
       </TouchableOpacity>
       
       {isExpanded && type === 'myEvents' && (
-        <View style={{ 
-          flexDirection: 'row', 
-          padding: 10, 
-          backgroundColor: '#f5f5f5',
-          borderBottomWidth: 1,
-          borderBottomColor: '#eee'
-        }}>
+        <View style={styles.tabContainer}>
           <TouchableOpacity 
-            style={{ 
-              flex: 1, 
-              alignItems: 'center',
-              paddingVertical: 8,
-              backgroundColor: activeTab === 'upcoming' ? '#fff' : 'transparent',
-              borderRadius: 5
-            }}
+            style={[
+              styles.tab,
+              activeTab === 'upcoming' && styles.activeTab
+            ]}
             onPress={() => setActiveTab('upcoming')}
           >
-            <Text style={{ 
-              fontWeight: activeTab === 'upcoming' ? 'bold' : 'normal',
-              color: activeTab === 'upcoming' ? '#000' : '#666'
-            }}>
+            <Text style={[
+              styles.tabText,
+              activeTab === 'upcoming' ? styles.activeTabText : styles.inactiveTabText
+            ]}>
               Upcoming
             </Text>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={{ 
-              flex: 1, 
-              alignItems: 'center',
-              paddingVertical: 8,
-              backgroundColor: activeTab === 'completed' ? '#fff' : 'transparent',
-              borderRadius: 5
-            }}
+            style={[
+              styles.tab,
+              activeTab === 'completed' && styles.activeTab
+            ]}
             onPress={() => setActiveTab('completed')}
           >
-            <Text style={{ 
-              fontWeight: activeTab === 'completed' ? 'bold' : 'normal',
-              color: activeTab === 'completed' ? '#000' : '#666'
-            }}>
+            <Text style={[
+              styles.tabText,
+              activeTab === 'completed' ? styles.activeTabText : styles.inactiveTabText
+            ]}>
               Completed
             </Text>
           </TouchableOpacity>
@@ -115,63 +106,57 @@ const EventSection = ({ title, events, type }) => {
 export default function Events() {
   const myEvents = [
     {
-      title: "Designers Meetup 2022",
-      date: "03 October, 22",
-      location: "Gulshan, Dhaka",
+      title: "Designers Meetup 2024: UI/UX Trends and Best Practices",
+      date: "03 October, 2024",
+      location: "Innovation Hub, District 1, HCMC",
       status: "upcoming"
     },
     {
-      title: "Tech Conference 2022",
-      date: "15 October, 22",
-      location: "Gulshan, Dhaka",
+      title: "Tech Conference 2024: AI & Machine Learning",
+      date: "15 October, 2024",
+      location: "Saigon Exhibition Center, District 7",
       status: "upcoming"
     },
     {
-      title: "Web Summit 2022",
-      date: "01 September, 22",
-      location: "Gulshan, Dhaka",
+      title: "Web Summit 2024: Future of Web Development",
+      date: "01 September, 2024",
+      location: "HCMC University of Technology",
       status: "completed"
     },
     {
-      title: "Mobile Dev Meetup",
-      date: "20 August, 22",
-      location: "Gulshan, Dhaka",
+      title: "Mobile Development Workshop: React Native & Flutter",
+      date: "20 August, 2024",
+      location: "CoderSchool Campus, District 4",
       status: "completed"
     }
   ]
 
   const attendedEvents = [
     {
-      title: "Designers Meetup 2021",
-      date: "03 October, 21",
-      location: "Gulshan, Dhaka"
+      title: "Vietnam Web Summit 2023",
+      date: "03 October, 2023",
+      location: "Rex Hotel, District 1, HCMC"
     },
     {
-      title: "Tech Conference 2021",
-      date: "15 October, 21",
-      location: "Gulshan, Dhaka"
+      title: "Mobile Development Conference 2023",
+      date: "15 October, 2023",
+      location: "Landmark 81, Binh Thanh District"
     }
   ]
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
-      <View style={{ 
-        flexDirection: 'row', 
-        alignItems: 'center',
-        padding: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee'
-      }}>
-        <TouchableOpacity>
-          <Ionicons name="chevron-back" size={24} color="black" />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.headerButton}>
+          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 15 }}>Events</Text>
+        <Text style={styles.headerTitle}>Events</Text>
       </View>
 
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <EventSection title="My Events" events={myEvents} type="myEvents" />
         <EventSection title="Events attended" events={attendedEvents} type="attended" />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   )
 }
