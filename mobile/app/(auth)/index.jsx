@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from 'react-native'
 import styles from '../../assets/styles/login.styles'
 import {useState} from 'react'
 import {Image} from 'react-native'
@@ -14,8 +14,23 @@ export default function Login() {
   const { login, isLoading} = useAuthStore();
 
   const handleLogin = async () => {
+    // Kiểm tra input
+    if (!email || !password) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ email và mật khẩu');
+      return;
+    }
+
+    // Kiểm tra định dạng email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Lỗi', 'Email không hợp lệ');
+      return;
+    }
+
     const result = await login(email, password);
-    if(!result.success) Alert.alert('Error', result.error);
+    if(!result.success) {
+      Alert.alert('Lỗi', result.error);
+    }
   }
   
   return (

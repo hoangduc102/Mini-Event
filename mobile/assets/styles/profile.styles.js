@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+    flex: 1,
+    marginRight: 10,
     shadowColor: '#ff4757',
     shadowOffset: {
       width: 0,
@@ -164,7 +164,31 @@ const styles = StyleSheet.create({
     shadowRadius: 4.65,
     elevation: 8,
   },
-  logoutText: {
+  deleteAccountButton: {
+    backgroundColor: '#2c3e50',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    marginLeft: 10,
+    shadowColor: '#2c3e50',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    marginTop: 30,
+    marginBottom: 30,
+    paddingHorizontal: 10,
+  },
+  buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',

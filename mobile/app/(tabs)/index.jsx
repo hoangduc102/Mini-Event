@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { Link } from 'expo-router';
+import { SvgUri } from 'react-native-svg';
 import styles from '../../assets/styles/home.styles';
 import COLORS from '../../constants/colors';
 import ResponsiveInfo from '../../components/ResponsiveInfo';
@@ -53,17 +54,29 @@ export default function Home() {
 
   const displayedEvents = showAllEvents ? upcomingEvents : upcomingEvents.slice(0, 2);
 
+  console.log('User data:', user);
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* <ResponsiveInfo /> */}
       {/* Header Section */}
       <View style={styles.header}>
         <View style={styles.userInfo}>
-          <Image 
-            source={user?.profileImage ? { uri: user.profileImage } : require('../../assets/images/App-logo.png')}
-            style={styles.avatar}
-            defaultSource={require('../../assets/images/App-logo.png')}
-          />
+          {user?.image?.endsWith('.svg') ? (
+            <View style={styles.avatar}>
+              <SvgUri
+                width="100%"
+                height="100%"
+                uri={user.image}
+              />
+            </View>
+          ) : (
+            <Image 
+              source={user?.image ? { uri: user.image } : require('../../assets/images/App-logo.png')}
+              style={styles.avatar}
+              defaultSource={require('../../assets/images/App-logo.png')}
+            />
+          )}
           <View style={styles.greetingContainer}>
             <Text style={styles.greetingText}>Hello,</Text>
             <Text style={styles.username} numberOfLines={1}>{user?.username || 'Guest'}</Text>

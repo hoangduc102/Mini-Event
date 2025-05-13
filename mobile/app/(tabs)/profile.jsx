@@ -1,10 +1,17 @@
-import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert } from 'react-native';
 import { useAuthStore } from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../../assets/styles/profile.styles';
+import { SvgUri } from 'react-native-svg';
+
+const formatDate = (timestamp) => {
+  if (!timestamp) return '';
+  const date = new Date(timestamp.seconds * 1000);
+  return date.toLocaleDateString('vi-VN');
+};
 
 export default function Profile() {
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -13,10 +20,21 @@ export default function Profile() {
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            <Image
-              source={{ uri: 'https://placekitten.com/200/200' }}
+          {user?.image?.endsWith('.svg') ? (
+            <View style={styles.avatar}>
+              <SvgUri
+                width="100%"
+                height="100%"
+                uri={user.image}
+              />
+            </View>
+          ) : (
+            <Image 
+              source={user?.image ? { uri: user.image } : require('../../assets/images/App-logo.png')}
               style={styles.avatar}
+              defaultSource={require('../../assets/images/App-logo.png')}
             />
+          )}
             <TouchableOpacity style={styles.editButton}>
               <Ionicons name="pencil" size={20} color="#4a90e2" />
             </TouchableOpacity>
@@ -25,22 +43,22 @@ export default function Profile() {
 
         {/* User Info */}
         <View style={styles.userInfoContainer}>
-          <Text style={styles.username}>Itunuoluwa Abidoye</Text>
-          <Text style={styles.handle}>@itunuoluwa</Text>
+          <Text style={styles.username}>{user?.username || 'No username'}</Text>
+          <Text style={styles.handle}>{user?.email || 'No email'}</Text>
 
           {/* Stats */}
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>25</Text>
-              <Text style={styles.statLabel}>Sự kiện đã tạo</Text>
+              <Text style={styles.statNumber}>{user?.createdEvents?.length || 0}</Text>
+              <Text style={styles.statLabel}>Created Events</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>1.2k</Text>
-              <Text style={styles.statLabel}>Sự kiện đã tham gia </Text>
+              <Text style={styles.statNumber}>{user?.joinedEvents?.length || 0}</Text>
+              <Text style={styles.statLabel}>Joined Events</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>348</Text>
-              <Text style={styles.statLabel}>Ngày bắt đầu </Text>
+              <Text style={styles.statNumber}>{user?.createDay ? formatDate(user.createDay) : ''}</Text>
+              <Text style={styles.statLabel}>Start Date</Text>
             </View>
           </View>
         </View>
@@ -51,7 +69,7 @@ export default function Profile() {
             <View style={styles.menuIconContainer}>
               <Ionicons name="help-circle-outline" size={22} color="#4a90e2" />
             </View>
-            <Text style={styles.menuText}>Trợ giúp & Hỗ trợ</Text>
+            <Text style={styles.menuText}>Help & Support</Text>
             <Ionicons name="chevron-forward" size={22} color="#95a5a6" />
           </TouchableOpacity>
 
@@ -59,7 +77,7 @@ export default function Profile() {
             <View style={styles.menuIconContainer}>
               <Ionicons name="information-circle-outline" size={22} color="#4a90e2" />
             </View>
-            <Text style={styles.menuText}>Thông tin ứng dụng</Text>
+            <Text style={styles.menuText}>About App</Text>
             <Ionicons name="chevron-forward" size={22} color="#95a5a6" />
           </TouchableOpacity>
 
@@ -67,15 +85,44 @@ export default function Profile() {
             <View style={styles.menuIconContainer}>
               <Ionicons name="settings-outline" size={22} color="#4a90e2" />
             </View>
-            <Text style={styles.menuText}>Cài đặt</Text>
+            <Text style={styles.menuText}>Settings</Text>
             <Ionicons name="chevron-forward" size={22} color="#95a5a6" />
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Ionicons name="log-out-outline" size={20} color="#fff" />
-          <Text style={styles.logoutText}>Đăng xuất</Text>
-        </TouchableOpacity>
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.logoutButton} 
+            onPress={logout}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Đăng xuất</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.deleteAccountButton}
+            onPress={() => {
+              Alert.alert(
+                "Xóa tài khoản",
+                "Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.",
+                [
+                  {
+                    text: "Hủy",
+                    style: "cancel"
+                  },
+                  { 
+                    text: "Xóa", 
+                    onPress: () => {/* TODO: Implement delete account */},
+                    style: "destructive"
+                  }
+                ]
+              );
+            }}
+          >
+            <Ionicons name="trash-outline" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Xóa tài khoản</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
