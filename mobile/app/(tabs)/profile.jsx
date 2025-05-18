@@ -74,11 +74,11 @@ export default function Profile() {
           {/* Stats */}
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.createdEvents?.length || 0}</Text>
+              <Text style={styles.statNumber}>{user?.eventCreate || 0}</Text>
               <Text style={styles.statLabel}>Created Events</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.joinedEvents?.length || 0}</Text>
+              <Text style={styles.statNumber}>{user?.eventJoin || 0}</Text>
               <Text style={styles.statLabel}>Joined Events</Text>
             </View>
             <View style={styles.statItem}>

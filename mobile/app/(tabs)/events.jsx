@@ -1,8 +1,10 @@
-import { View, Text, Image, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, Image, TouchableOpacity, ScrollView, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { styles } from '../../assets/styles/event.styles'
 import { useRouter } from 'expo-router'
+import { useEventStore } from '../../store/eventStore'
+import { useAuthStore } from '../../store/authStore'
 
 const COLORS = {
   primary: '#4F46E5',
@@ -10,7 +12,32 @@ const COLORS = {
   text: '#1E293B',
 }
 
-const StatusBadge = ({ status }) => (
+// Cache months array
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Pure function không sử dụng hooks
+const formatDateString = (dateString) => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) throw new Error('Invalid date');
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = MONTHS[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `${day} ${month}, ${year}`;
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return dateString;
+  }
+};
+
+const StatusBadge = React.memo(({ status }) => (
   <View style={[
     styles.statusBadge,
     status === 'upcoming' ? styles.upcomingBadge : styles.completedBadge
@@ -19,41 +46,68 @@ const StatusBadge = ({ status }) => (
       {status === 'upcoming' ? 'Upcoming' : 'Completed'}
     </Text>
   </View>
-)
+));
 
-const EventCard = ({ title, date, location, status }) => (
-  <View style={styles.eventCard}>
-    <Image 
-      source={require('../../assets/images/App-logo.png')}
-      style={styles.eventImage}
-    />
-    <View style={styles.eventInfo}>
-      {status && <StatusBadge status={status} />}
-      <Text style={styles.eventTitle} numberOfLines={2}>{title}</Text>
-      <Text style={styles.eventDate}>{date}</Text>
-      <View style={styles.locationContainer}>
-        <Ionicons name="location-outline" size={16} color={COLORS.secondary} />
-        <Text style={styles.locationText} numberOfLines={1}>{location}</Text>
-      </View>
-    </View>
-    <TouchableOpacity style={styles.showDetailButton}>
-      <Text style={styles.showDetailText}>VIEW</Text>
-    </TouchableOpacity>
-  </View>
-)
-
-const EventSection = ({ title, events, type }) => {
-  const [isExpanded, setIsExpanded] = useState(true)
-  const [activeTab, setActiveTab] = useState('upcoming')
+const EventCard = React.memo(({ title, date, location, status, onPress }) => {
+  const formattedDate = useMemo(() => formatDateString(date), [date]);
   
-  const filteredEvents = type === 'myEvents' ? 
-    events.filter(event => event.status === activeTab) :
-    events
+  return (
+    <View style={styles.eventCard}>
+      <Image 
+        source={require('../../assets/images/App-logo.png')}
+        style={styles.eventImage}
+      />
+      <View style={styles.eventInfo}>
+        {status && <StatusBadge status={status} />}
+        <Text style={styles.eventTitle} numberOfLines={2}>{title}</Text>
+        <Text style={styles.eventDate}>{formattedDate}</Text>
+        <View style={styles.locationContainer}>
+          <Ionicons name="location-outline" size={16} color={COLORS.secondary} />
+          <Text style={styles.locationText} numberOfLines={1}>{location}</Text>
+        </View>
+      </View>
+      <TouchableOpacity style={styles.showDetailButton} onPress={onPress}>
+        <Text style={styles.showDetailText}>VIEW</Text>
+      </TouchableOpacity>
+    </View>
+  );
+});
+
+const EventSection = React.memo(({ title, events, type }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [activeTab, setActiveTab] = useState('upcoming');
+  const router = useRouter();
+
+  const handleEventPress = useCallback((eventId) => {
+    router.push(`/events/${eventId}`);
+  }, [router]);
+
+  const filteredEvents = useMemo(() => {
+    if (type !== 'myEvents') return events;
+
+    const now = new Date();
+    return events.filter(event => {
+      try {
+        const eventDate = new Date(event.date);
+        return activeTab === 'upcoming' ? eventDate > now : eventDate <= now;
+      } catch {
+        return false;
+      }
+    });
+  }, [events, type, activeTab]);
+
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded(prev => !prev);
+  }, []);
+
+  const handleTabChange = useCallback((tab) => {
+    setActiveTab(tab);
+  }, []);
 
   return (
     <View style={{ marginBottom: 20 }}>
       <TouchableOpacity 
-        onPress={() => setIsExpanded(!isExpanded)}
+        onPress={toggleExpanded}
         style={styles.sectionHeader}
       >
         <Text style={styles.sectionTitle}>{title}</Text>
@@ -71,7 +125,7 @@ const EventSection = ({ title, events, type }) => {
               styles.tab,
               activeTab === 'upcoming' && styles.activeTab
             ]}
-            onPress={() => setActiveTab('upcoming')}
+            onPress={() => handleTabChange('upcoming')}
           >
             <Text style={[
               styles.tabText,
@@ -85,7 +139,7 @@ const EventSection = ({ title, events, type }) => {
               styles.tab,
               activeTab === 'completed' && styles.activeTab
             ]}
-            onPress={() => setActiveTab('completed')}
+            onPress={() => handleTabChange('completed')}
           >
             <Text style={[
               styles.tabText,
@@ -97,72 +151,176 @@ const EventSection = ({ title, events, type }) => {
         </View>
       )}
       
-      {isExpanded && filteredEvents.map((event, index) => (
-        <EventCard key={index} {...event} />
+      {isExpanded && filteredEvents.map((event) => (
+        <EventCard 
+          key={event.id} 
+          title={event.name}
+          date={event.date}
+          location={event.address}
+          status={type === 'myEvents' ? (new Date(event.date) > new Date() ? 'upcoming' : 'completed') : undefined}
+          onPress={() => handleEventPress(event.id)}
+        />
       ))}
     </View>
-  )
-}
+  );
+});
 
 export default function Events() {
-  const myEvents = [
-    {
-      title: "Designers Meetup 2024: UI/UX Trends and Best Practices",
-      date: "03 October, 2024",
-      location: "Innovation Hub, District 1, HCMC",
-      status: "upcoming"
-    },
-    {
-      title: "Tech Conference 2024: AI & Machine Learning",
-      date: "15 October, 2024",
-      location: "Saigon Exhibition Center, District 7",
-      status: "upcoming"
-    },
-    {
-      title: "Web Summit 2024: Future of Web Development",
-      date: "01 September, 2024",
-      location: "HCMC University of Technology",
-      status: "completed"
-    },
-    {
-      title: "Mobile Development Workshop: React Native & Flutter",
-      date: "20 August, 2024",
-      location: "CoderSchool Campus, District 4",
-      status: "completed"
-    }
-  ]
+  const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const { 
+    myEvents,
+    attendedEvents,
+    isLoading,
+    isLoadingAttended,
+    error,
+    attendedError,
+    getMyEvents,
+    getAttendedEvents,
+    resetEvents
+  } = useEventStore();
 
-  const attendedEvents = [
-    {
-      title: "Vietnam Web Summit 2023",
-      date: "03 October, 2023",
-      location: "Rex Hotel, District 1, HCMC"
-    },
-    {
-      title: "Mobile Development Conference 2023",
-      date: "15 October, 2023",
-      location: "Landmark 81, Binh Thanh District"
-    }
-  ]
+  const { token, user } = useAuthStore();
 
-  const router = useRouter()
+  const loadAllEvents = useCallback(async () => {
+    if (!token || !user) {
+      console.log('No token or user available');
+      router.replace('/login');
+      return;
+    }
+
+    try {
+      console.log('Loading events...');
+      const [myEventsResult, attendedEventsResult] = await Promise.all([
+        getMyEvents(),
+        getAttendedEvents()
+      ]);
+
+      console.log('My Events Result:', myEventsResult);
+      console.log('Attended Events Result:', attendedEventsResult);
+
+      if (!myEventsResult.success) {
+        console.error('Failed to load my events:', myEventsResult.error);
+      }
+
+      if (!attendedEventsResult.success) {
+        console.error('Failed to load attended events:', attendedEventsResult.error);
+      }
+    } catch (error) {
+      console.error('Error loading events:', error);
+    }
+  }, [getMyEvents, getAttendedEvents, token, user, router]);
+
+  useEffect(() => {
+    if (token && user) {
+      loadAllEvents();
+    }
+  }, [loadAllEvents, token, user]);
+
+  const handleRefresh = useCallback(async () => {
+    if (!token || !user) {
+      router.replace('/login');
+      return;
+    }
+    
+    setRefreshing(true);
+    resetEvents();
+    await loadAllEvents();
+    setRefreshing(false);
+  }, [resetEvents, loadAllEvents, token, user, router]);
+
+  const handleBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={handleBack}
+          >
+            <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Events</Text>
+        </View>
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity onPress={loadAllEvents} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.headerButton}
-          onPress={() => router.back()}
+          onPress={handleBack}
         >
           <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Events</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <EventSection title="My Events" events={myEvents} type="myEvents" />
-        <EventSection title="Events attended" events={attendedEvents} type="attended" />
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+          />
+        }
+      >
+        {isLoading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          </View>
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity onPress={loadAllEvents} style={styles.retryButton}>
+              <Text style={styles.retryButtonText}>Thử lại</Text>
+            </TouchableOpacity>
+          </View>
+        ) : myEvents.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <Text style={styles.noEventsText}>Bạn chưa có sự kiện nào</Text>
+            <TouchableOpacity 
+              style={styles.createEventButton}
+              onPress={() => router.push('/create')}
+            >
+              <Text style={styles.createEventButtonText}>Tạo sự kiện mới</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <EventSection title="My Events" events={myEvents.map(item => item.event)} type="myEvents" />
+        )}
+
+        {isLoadingAttended ? (
+          <View style={styles.loadingMore}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
+          </View>
+        ) : attendedError ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Không thể tải danh sách sự kiện đã tham dự</Text>
+            <TouchableOpacity onPress={getAttendedEvents} style={styles.retryButton}>
+              <Text style={styles.retryButtonText}>Thử lại</Text>
+            </TouchableOpacity>
+          </View>
+        ) : attendedEvents.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <Text style={styles.noEventsText}>Bạn chưa tham gia sự kiện nào</Text>
+          </View>
+        ) : (
+          <EventSection title="Events attended" events={attendedEvents} type="attended" />
+        )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }

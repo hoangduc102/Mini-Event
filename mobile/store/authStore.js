@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { FIREBASE_APIKEY } from '@env'
 import axios from 'axios'
+import { useEventStore } from './eventStore'
 
 const API_BASE_URL = 'http://192.168.43.252:80/v1'
 
@@ -11,6 +12,68 @@ console.log('Firebase API Key loaded:', FIREBASE_APIKEY ? 'Yes' : 'No');
 if (!FIREBASE_APIKEY) {
   console.warn('FIREBASE_API_KEY is not loaded from .env file')
 }
+
+// Utility function để refresh token
+const refreshTokenUtil = async () => {
+  try {
+    const refreshToken = await AsyncStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      throw new Error('No refresh token found');
+    }
+
+    const response = await axios.post(
+      `https://securetoken.googleapis.com/v1/token?key=${FIREBASE_APIKEY}`,
+      `grant_type=refresh_token&refresh_token=${refreshToken}`,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
+
+    if (!response.data.id_token) {
+      throw new Error('Invalid refresh token response');
+    }
+
+    await AsyncStorage.setItem('token', response.data.id_token);
+    await AsyncStorage.setItem('refreshToken', response.data.refresh_token);
+
+    return response.data.id_token;
+  } catch (error) {
+    throw new Error('Failed to refresh token');
+  }
+};
+
+// Utility function để check token validity
+const checkTokenValidity = async (token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/users/info`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.status === 200;
+  } catch (error) {
+    return false;
+  }
+};
+
+// Thêm hàm retry utility
+const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+      }
+    }
+  }
+  throw lastError;
+};
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -41,143 +104,149 @@ export const useAuthStore = create((set, get) => ({
   register: async (username, phone, email, password) => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_BASE_URL}/users/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          username,
-          phone,
-          email,
-          password
-        })
-      })
+      const response = await axios.post(`${API_BASE_URL}/users/register`, {
+        username,
+        phone,
+        email,
+        password
+      });
 
-      const responseData = await response.json()
-      console.log('Registration response:', responseData);
-
-      if (responseData.status !== 200) {
-        throw new Error(responseData.message || "Something went wrong");
+      if (response.data.status !== 200 || !response.data.data) {
+        throw new Error(response.data.message || "Registration failed");
       }
 
-      if (!responseData.data) {
-        throw new Error("Invalid response format from server");
-      }
-
-      const userData = responseData.data;
+      const userData = response.data.data;
       const userToken = userData.id;
 
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       await AsyncStorage.setItem('token', userToken);
 
       set({ user: userData, token: userToken, isLoading: false });
-
-      return {
-        success: true,
-      }
-    
+      return { success: true };
     } catch (error) {
-      console.log('Registration error:', error);
       set({ isLoading: false });
       return {
         success: false,
-        error: error.message || "Something went wrong",
+        error: error.response?.data?.message || error.message
+      };
+    }
+  },
+
+  login: async (email, password) => {
+    set({ isLoading: true });
+    try {
+      const response = await axios.post(`${API_BASE_URL}/users/login`, {
+        email,
+        password
+      });
+
+      if (response.data.status !== 200 || !response.data.data) {
+        throw new Error(response.data.message || "Login failed");
       }
-    } 
+
+      const authData = response.data.data;
+      await AsyncStorage.setItem('token', authData.idToken);
+      await AsyncStorage.setItem('refreshToken', authData.refreshToken);
+
+      // Get user info
+      const userInfoResponse = await axios.get(`${API_BASE_URL}/users/info`, {
+        headers: {
+          'Authorization': `Bearer ${authData.idToken}`
+        }
+      });
+
+      if (userInfoResponse.data.status !== 200 || !userInfoResponse.data.data) {
+        throw new Error("Failed to get user information");
+      }
+
+      const userData = userInfoResponse.data.data;
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
+
+      set({
+        user: userData,
+        token: authData.idToken,
+        isLoading: false
+      });
+
+      return { success: true };
+    } catch (error) {
+      set({ isLoading: false });
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
+      };
+    }
   },
 
   checkAuth: async () => {
-    try{
+    try {
       const token = await AsyncStorage.getItem('token');
       const userJson = await AsyncStorage.getItem('user');
-      const user = userJson ? JSON.parse(userJson) : null;
       
-      set({user, token});
-    }catch(error){
-      console.log('Auth check failed ', error);
+      if (!token || !userJson) {
+        return false;
+      }
+
+      const isValid = await retryOperation(async () => {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/users/info`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          return response.status === 200;
+        } catch (error) {
+          if (error.response?.status === 401) {
+            const newToken = await refreshTokenUtil();
+            if (newToken) {
+              const user = JSON.parse(userJson);
+              set({ user, token: newToken });
+              return true;
+            }
+          }
+          throw error;
+        }
+      });
+
+      if (isValid) {
+        const user = JSON.parse(userJson);
+        set({ user, token });
+        return true;
+      }
+
+      await get().logout();
+      return false;
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      return false;
     }
   },
 
   logout: async () => {
-    await AsyncStorage.removeItem('user');
-    await AsyncStorage.removeItem('token');
-    set({user: null, token: null});
-  },
-
-  login: async (email, password) => {
-    set({isLoading: true});
-    try{
-      console.log('Attempting login with:', { email });
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
       
-      // 1. Xác thực với Firebase
-      const response = await fetch(`${API_BASE_URL}/users/login`, {
-        method : 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email, 
-          password
-        }),
-      });
-
-      console.log('Login response status:', response.status);
-      const responseData = await response.json();
-      console.log('Login response data:', responseData);
-
-      if (responseData.status !== 200) {
-        throw new Error(responseData.message || "Something went wrong");
-      }
-
-      if (!responseData.data) {
-        throw new Error("Invalid response format from server");
-      }
-
-      const authData = responseData.data;
-      const userToken = authData.idToken;
-      const refreshToken = authData.refreshToken;
-
-      // Lưu token
-      await AsyncStorage.setItem('token', userToken);
-      await AsyncStorage.setItem('refreshToken', refreshToken);
-
-      // 2. Lấy thông tin user đầy đủ
-      const userInfoResponse = await fetch(`${API_BASE_URL}/users/info`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const userInfoData = await userInfoResponse.json();
-      console.log('User info response:', userInfoData);
-
-      if (userInfoData.status !== 200 || !userInfoData.data) {
-        throw new Error("Failed to get user information");
-      }
-
-      const fullUserData = userInfoData.data;
-
-      // Lưu thông tin user đầy đủ
-      await AsyncStorage.setItem('user', JSON.stringify(fullUserData));
+      // Reset state trong authStore
       set({
-        user: fullUserData,
-        token: userToken,
-        isLoading: false
+        user: null,
+        token: null,
+        isLoading: false,
+        error: null
       });
       
-      return {
-        success: true,
-      }
-    }catch(error){
-      console.log('Login error:', error);
-      set({isLoading: false});
+      // Reset state trong eventStore
+      const { resetEvents: resetEventStore } = useEventStore.getState();
+      resetEventStore();
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Logout error:', error);
       return {
         success: false,
-        error: error.message || "Something went wrong",
-      }
+        error: error.message
+      };
     }
   },
 
@@ -205,6 +274,8 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const userData = responseData.data;
+      console.log('User Info Response:', userData);
+      console.log('Created Events:', userData?.createdEvents);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       set({ user: userData });
       return { success: true, user: userData };
@@ -278,6 +349,9 @@ export const useAuthStore = create((set, get) => ({
         throw new Error(response.data.message || 'Tạo sự kiện thất bại');
       }
 
+      // Cập nhật lại thông tin user sau khi tạo sự kiện thành công
+      await get().getUserInfo();
+
       set({ isLoading: false });
       return {
         success: true,
@@ -332,40 +406,26 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoading: true });
     try {
       const token = get().token;
-      if (!token) throw new Error('Vui lòng đăng nhập để xóa tài khoản');
+      if (!token) throw new Error('Authentication required');
 
-      const response = await fetch(`${API_BASE_URL}/users/info`, {
-        method: 'DELETE',
+      const response = await axios.delete(`${API_BASE_URL}/users/info`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
-      const responseData = await response.json();
-
-      if (response.status === 401) {
-        await get().logout();
-        throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      if (response.data.status !== 200) {
+        throw new Error(response.data.message || "Failed to delete account");
       }
 
-      if (responseData.status !== 200) {
-        throw new Error(responseData.message || "Không thể xóa tài khoản");
-      }
-
-      // Nếu xóa thành công trên server, thực hiện logout
       await get().logout();
       set({ isLoading: false });
-      
-      return {
-        success: true
-      };
+      return { success: true };
     } catch (error) {
-      console.error('Delete account error:', error);
       set({ isLoading: false });
       return {
         success: false,
-        error: error.message || "Không thể xóa tài khoản. Vui lòng thử lại sau."
+        error: error.response?.data?.message || error.message
       };
     }
   },
@@ -452,8 +512,6 @@ export const useAuthStore = create((set, get) => ({
         }
       });
 
-      console.log('Response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response:', errorText);
@@ -472,6 +530,9 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const events = responseData.data;
+      console.log('API Response - Events count:', events.length);
+      console.log('API Response - First event:', events[0]);
+      console.log('API Response - Last event:', events[events.length - 1]);
       
       // Chỉ cập nhật lastDate nếu có events được trả về
       const newLastDate = events.length > 0 ? events[events.length - 1].date : get().lastDate;
@@ -505,4 +566,82 @@ export const useAuthStore = create((set, get) => ({
       };
     }
   },
+
+  // Thêm function mới để lấy events đã tham dự
+  getAttendedEvents: async () => {
+    try {
+      const token = get().token;
+      if (!token) {
+        return { 
+          success: false, 
+          error: 'Vui lòng đăng nhập để xem danh sách sự kiện đã tham dự' 
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/events/attended`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Lỗi khi tải sự kiện đã tham dự: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      
+      if (responseData.status !== 200) {
+        throw new Error(responseData.message || "Có lỗi xảy ra");
+      }
+
+      return {
+        success: true,
+        data: responseData.data || []
+      };
+    } catch (error) {
+      console.error('Error in getAttendedEvents:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  // Thêm function để đăng ký tham gia event
+  registerEvent: async (eventId) => {
+    try {
+      const token = get().token;
+      if (!token) {
+        return { 
+          success: false, 
+          error: 'Vui lòng đăng nhập để đăng ký tham gia sự kiện' 
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/events/register/${eventId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Lỗi khi đăng ký tham gia: ${response.status}`);
+      }
+
+      // Response là QR code image
+      const blob = await response.blob();
+      return {
+        success: true,
+        data: URL.createObjectURL(blob)
+      };
+    } catch (error) {
+      console.error('Error in registerEvent:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 }));

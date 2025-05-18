@@ -232,9 +232,13 @@ const styles = StyleSheet.create({
   },
   eventCardContent: {
     flex: 1,
-    justifyContent: 'space-between',
   },
   eventInfo: {
+    flex: 1,
+    height: '100%',
+    justifyContent: 'space-between',
+  },
+  eventTopContent: {
     flex: 1,
   },
   eventDate: {
@@ -245,24 +249,33 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     color: '#FFF',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 8,
+    lineHeight: 26,
   },
   eventLocation: {
     color: '#FFF',
     fontSize: 14,
+    marginBottom: 8,
+    opacity: 0.9,
+  },
+  eventBottomContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 'auto',
   },
   joinButton: {
     backgroundColor: '#FFF',
     paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 20,
-    alignSelf: 'flex-start',
   },
   joinButtonText: {
     color: '#FF6B6B',
     fontWeight: '600',
+    fontSize: 13,
   },
   upcomingEventCard: {
     flexDirection: 'row',
@@ -352,21 +365,29 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   showMoreButton: {
-    // alignItems: 'center',
-    // paddingVertical: 10,
-    //backgroundColor: '#FFF',
-    // borderRadius: 12,
-    // marginTop: 5,
-    // shadowColor: '#000',
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 2,
-    // },
-    //shadowOpacity: 0.1,
-    //shadowRadius: 4,
-    //elevation: 3,
-    //width: '40%',
     alignSelf: 'center',
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF6B6B',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

@@ -68,6 +68,7 @@ export default function Search() {
     if (token && user) {
       const result = await getEvents(false);
       console.log('Load events result:', result);
+      console.log('Current events in state:', events.length);
     }
   };
 
@@ -76,6 +77,7 @@ export default function Search() {
     if (!isLoadingMore && hasMoreEvents && token && user) {
       const result = await getEvents(true);
       console.log('Load more result:', result);
+      console.log('Updated events in state:', events.length);
     }
   };
 

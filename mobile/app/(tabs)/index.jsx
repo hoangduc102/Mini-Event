@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
@@ -13,6 +13,7 @@ export default function Home() {
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const router = useRouter();
 
   // Lấy danh sách sự kiện khi component mount
@@ -24,13 +25,17 @@ export default function Home() {
     if (!token) return;
     
     setIsLoading(true);
+    setError(null);
     try {
       const result = await getEvents(false);
-      if (result.success) {
+      if (result.success && result.data) {
         setEvents(result.data);
+      } else {
+        setError(result.error || 'Không thể tải danh sách sự kiện');
       }
     } catch (error) {
       console.error('Failed to load events:', error);
+      setError('Đã có lỗi xảy ra khi tải danh sách sự kiện');
     } finally {
       setIsLoading(false);
     }
@@ -54,6 +59,25 @@ export default function Home() {
 
   const displayedEvents = showAllEvents ? events : events.slice(0, 2);
   const hotEvents = events.slice(0, 3); // Lấy 3 sự kiện đầu tiên làm hot events
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadEvents}>
+          <Text style={styles.retryButtonText}>Thử lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -114,21 +138,27 @@ export default function Home() {
                 >
                   <View style={styles.eventCardContent}>
                     <View style={styles.eventInfo}>
-                      <Text style={styles.eventDate}>
-                        {formattedEvent.month} {formattedEvent.day}
-                      </Text>
-                      <Text style={styles.eventTitle}>{formattedEvent.title}</Text>
-                      <Text style={styles.eventLocation}>
-                        <Ionicons name="location-outline" size={14} color="#FFF" />
-                        {' ' + formattedEvent.location}
-                      </Text>
+                      <View style={styles.eventTopContent}>
+                        <Text style={styles.eventDate}>
+                          {formattedEvent.month} {formattedEvent.day}
+                        </Text>
+                        <Text style={styles.eventTitle} numberOfLines={2}>
+                          {formattedEvent.title}
+                        </Text>
+                        <Text style={styles.eventLocation} numberOfLines={1}>
+                          <Ionicons name="location-outline" size={14} color="#FFF" />
+                          {' ' + formattedEvent.location}
+                        </Text>
+                      </View>
+                      <View style={styles.eventBottomContent}>
+                        <TouchableOpacity 
+                          style={styles.joinButton}
+                          onPress={() => router.push(`/event/${event.id}`)}
+                        >
+                          <Text style={styles.joinButtonText}>Tham Gia</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                    <TouchableOpacity 
-                      style={styles.joinButton}
-                      onPress={() => router.push(`/event/${event.id}`)}
-                    >
-                      <Text style={styles.joinButtonText}>Tham Gia</Text>
-                    </TouchableOpacity>
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
