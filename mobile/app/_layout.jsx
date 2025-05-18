@@ -5,8 +5,13 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initSentry } from "../config/sentry.js";
+import * as Sentry from '@sentry/react-native';
 
-export default function RootLayout() {
+// Initialize Sentry as early as possible
+initSentry();
+
+const RootLayoutBase = () => {
   const router = useRouter();
   const segments = useSegments();
   const [isReady, setIsReady] = useState(false);
@@ -23,6 +28,7 @@ export default function RootLayout() {
         }
         setIsReady(true);
       } catch (error) {
+        Sentry.captureException(error);
         console.error('Error during initialization:', error);
         setIsReady(true);
       }
@@ -61,3 +67,6 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+// Wrap the root component with Sentry error boundary
+export default Sentry.wrap(RootLayoutBase);

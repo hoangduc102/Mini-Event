@@ -56,6 +56,9 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Ứng dụng cần truy cập vị trí của bạn để hiển thị bản đồ và chọn địa điểm."
         }
+      ],
+      [
+        "sentry-expo"
       ]
     ],
     "experiments": {
@@ -66,6 +69,17 @@
       "assets/onboarding1.png",
       "assets/onboarding2.png",
       "assets/onboarding3.png"
-    ]
+    ],
+    "hooks": {
+      "postPublish": [
+        {
+          "file": "sentry-expo/upload-sourcemaps",
+          "config": {
+            "organization": "sentryapp",
+            "project": "mini-event"
+          }
+        }
+      ]
+    }
   }
 }
