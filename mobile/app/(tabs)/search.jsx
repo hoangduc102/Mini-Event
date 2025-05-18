@@ -1,82 +1,220 @@
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
-import React, { useState } from 'react';
+import { 
+  View, 
+  ScrollView, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  StatusBar, 
+  ActivityIndicator,
+  RefreshControl,
+  Alert
+} from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import EventCard from '../../components/EventCard';
 import SearchInput from '../../components/SearchInput';
-
-// Dữ liệu sự kiện mẫu
-const events = [
-  {
-    id: 1,
-    title: "Designers Meetup 2025",
-    date: "03 October, 22",
-    location: "Gulshan, Dhaka",
-    image: "https://images.unsplash.com/photo-1530099486328-e021101a494a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG1lZXR1cHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 2,
-    title: "Dribblers Meetup 2022",
-    date: "07 October, 22",
-    location: "Banani, Dhaka",
-    image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8ZHJpYmJibGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 3,
-    title: "Food Competition Event",
-    date: "10 October, 22",
-    location: "Mirpur, Dhaka",
-    image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Zm9vZHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 4,
-    title: "Basketball Final Match",
-    date: "10 October, 22",
-    location: "Uttara, Dhaka",
-    image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 5,
-    title: "ARB Stunt Riders Event",
-    date: "22 October, 22",
-    location: "M Badda, Dhaka",
-    image: "https://images.unsplash.com/photo-1605235186583-a8272b61f9fe?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 6,
-    title: "International Music Concert",
-    date: "30 October, 22",
-    location: "Gulshan, Dhaka",
-    image: "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 7,
-    title: "Football Final Match",
-    date: "03 October, 22",
-    location: "Gulshan, Dhaka",
-    image: "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: 8,
-    title: "Food Competition Event",
-    date: "10 October, 22",
-    location: "Mirpur, Dhaka",
-    image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
-  }
-];
+import { useAuthStore } from '../../store/authStore';
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
   
-  const filteredEvents = events.filter(event => 
-    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { 
+    events, 
+    isLoading, 
+    isLoadingMore,
+    hasMoreEvents,
+    error,
+    getEvents,
+    resetEvents,
+    clearError,
+    token,
+    user
+  } = useAuthStore();
+
+  // Load events lần đầu khi có token
+  useEffect(() => {
+    if (token && user) {
+      console.log('Initial load with token:', token);
+      loadEvents();
+    } else {
+      console.log('No token or user available');
+    }
+    return () => {
+      resetEvents();
+    };
+  }, [token, user]);
+
+  // Xử lý error
+  useEffect(() => {
+    if (error) {
+      if (error.includes('đăng nhập')) {
+        // Nếu là lỗi yêu cầu đăng nhập, không hiện alert
+        clearError();
+      } else {
+        Alert.alert(
+          'Lỗi',
+          error,
+          [{ text: 'OK', onPress: clearError }]
+        );
+      }
+    }
+  }, [error]);
+
+  const loadEvents = async () => {
+    console.log('Loading events...');
+    if (token && user) {
+      const result = await getEvents(false);
+      console.log('Load events result:', result);
+    }
+  };
+
+  const loadMore = async () => {
+    console.log('Loading more events...');
+    if (!isLoadingMore && hasMoreEvents && token && user) {
+      const result = await getEvents(true);
+      console.log('Load more result:', result);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    if (!token || !user) {
+      Alert.alert(
+        'Thông báo',
+        'Vui lòng đăng nhập để xem danh sách sự kiện',
+        [
+          { 
+            text: 'Đăng nhập', 
+            onPress: () => router.push('/login') 
+          },
+          { 
+            text: 'Hủy', 
+            style: 'cancel' 
+          }
+        ]
+      );
+      return;
+    }
+    setRefreshing(true);
+    await loadEvents();
+    setRefreshing(false);
+  }, [token, user]);
+
+  const filteredEvents = events.filter(event => {
+    if (!event || typeof event !== 'object') {
+      console.log('Invalid event object:', event);
+      return false;
+    }
+    
+    const searchLower = searchQuery.toLowerCase();
+    
+    // Tìm kiếm theo name
+    const name = typeof event.name === 'string' ? event.name.toLowerCase() : '';
+    
+    // Tìm kiếm theo description
+    const description = typeof event.description === 'string' ? event.description.toLowerCase() : '';
+    
+    // Tìm kiếm theo address
+    const address = typeof event.address === 'string' ? event.address.toLowerCase() : '';
+    
+    // Tìm kiếm theo eventTag
+    const eventTag = typeof event.eventTag === 'string' ? event.eventTag.toLowerCase() : '';
+
+    const isMatch = name.includes(searchLower) || 
+           description.includes(searchLower) || 
+           address.includes(searchLower) ||
+           eventTag.includes(searchLower);
+           
+    console.log('Event search match:', {
+      event: event.name,
+      searchQuery: searchLower,
+      isMatch
+    });
+    
+    return isMatch;
+  });
+
+  const renderFooter = () => {
+    if (!isLoadingMore) return null;
+    
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#0066cc" />
+      </View>
+    );
+  };
+
+  const renderContent = () => {
+    if (!token || !user) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>
+            Vui lòng đăng nhập để xem danh sách sự kiện
+          </Text>
+          <TouchableOpacity 
+            style={styles.loginButton}
+            onPress={() => router.push('/login')}
+          >
+            <Text style={styles.loginButtonText}>Đăng nhập</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (isLoading && events.length === 0) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0066cc" />
+        </View>
+      );
+    }
+
+    if (events.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Chưa có sự kiện công khai nào</Text>
+        </View>
+      );
+    }
+
+    if (searchQuery && filteredEvents.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>
+            Không tìm thấy sự kiện công khai nào phù hợp với từ khóa "{searchQuery}"
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <>
+        {searchQuery && filteredEvents.length > 0 && (
+          <Text style={styles.resultText}>
+            {filteredEvents.length} sự kiện công khai được tìm thấy
+          </Text>
+        )}
+        {(searchQuery ? filteredEvents : events).map((event) => (
+          <EventCard 
+            key={event.id} 
+            event={event}
+          />
+        ))}
+        {renderFooter()}
+      </>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={() => router.back()}
+        >
           <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Events</Text>
@@ -88,20 +226,41 @@ export default function Search() {
       <SearchInput 
         value={searchQuery}
         onChangeText={setSearchQuery}
+        placeholder="Tìm kiếm sự kiện..."
       />
       
       <ScrollView 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          (!token || !user) && styles.centerContent
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        }
+        onScroll={({ nativeEvent }) => {
+          if (!token || !user) return;
+          
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const isCloseToBottom = (layoutMeasurement.height + contentOffset.y) 
+            >= (contentSize.height - 20);
+            
+          if (isCloseToBottom) {
+            loadMore();
+          }
+        }}
+        scrollEventThrottle={400}
       >
-        {searchQuery ? (
+        {searchQuery && events.length > 0 ? (
           <Text style={styles.resultText}>
-            {filteredEvents.length} results found
+            {filteredEvents.length} kết quả được tìm thấy
           </Text>
         ) : null}
-        {filteredEvents.map((event) => (
-          <EventCard key={event.id} event={event} />
-        ))}
+        
+        {renderContent()}
       </ScrollView>
     </View>
   );
@@ -138,12 +297,49 @@ const styles = StyleSheet.create({
     color: '#1a1a1a'
   },
   scrollContent: {
-    paddingVertical: 8
+    paddingVertical: 8,
+    minHeight: '100%'
+  },
+  centerContent: {
+    justifyContent: 'center'
   },
   resultText: {
     fontSize: 14,
     color: '#666',
     marginHorizontal: 16,
     marginBottom: 8
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 50
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center'
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20
+  },
+  loginButton: {
+    backgroundColor: '#0066cc',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8
+  },
+  loginButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600'
   }
 });

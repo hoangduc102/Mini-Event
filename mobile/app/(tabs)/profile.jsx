@@ -1,17 +1,42 @@
-import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView, Alert, StyleSheet } from 'react-native';
 import { useAuthStore } from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../../assets/styles/profile.styles';
 import { SvgUri } from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import COLORS from '../../constants/colors';
 
-const formatDate = (timestamp) => {
-  if (!timestamp) return '';
-  const date = new Date(timestamp.seconds * 1000);
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
   return date.toLocaleDateString('vi-VN');
 };
 
 export default function Profile() {
-  const { logout, user } = useAuthStore();
+  const { logout, user, deleteAccount } = useAuthStore();
+  const router = useRouter();
+
+  const handleResetOnboarding = async () => {
+    try {
+      await AsyncStorage.removeItem('hasSeenOnboarding');
+      router.replace('/(onboarding)');
+    } catch (error) {
+      console.error('Error resetting onboarding:', error);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const result = await deleteAccount();
+    if (result.success) {
+      router.replace('/login');
+    } else {
+      Alert.alert(
+        "Lỗi",
+        result.error || "Không thể xóa tài khoản. Vui lòng thử lại sau."
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -112,7 +137,7 @@ export default function Profile() {
                   },
                   { 
                     text: "Xóa", 
-                    onPress: () => {/* TODO: Implement delete account */},
+                    onPress: handleDeleteAccount,
                     style: "destructive"
                   }
                 ]
@@ -121,6 +146,16 @@ export default function Profile() {
           >
             <Ionicons name="trash-outline" size={20} color="#fff" />
             <Text style={styles.buttonText}>Xóa tài khoản</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.debugSection}>
+          <Text style={styles.debugTitle}>Debug Tools</Text>
+          <TouchableOpacity 
+            style={styles.resetButton}
+            onPress={handleResetOnboarding}
+          >
+            <Text style={styles.resetButtonText}>Reset Onboarding</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

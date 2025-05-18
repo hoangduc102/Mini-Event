@@ -2,11 +2,15 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'rea
 import { useRouter } from 'expo-router';
 import Swiper from 'react-native-swiper';
 import COLORS from '../../constants/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState, useRef, useEffect } from 'react';
 
 const { width, height } = Dimensions.get('window');
 
 export default function Onboarding() {
   const router = useRouter();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const swiperRef = useRef(null);
 
   const slides = [
     {
@@ -29,12 +33,49 @@ export default function Onboarding() {
     }
   ];
 
-  const handleGetStarted = () => {
-    router.replace('/(auth)');
+  useEffect(() => {
+    // Đảm bảo swiper và state luôn đồng bộ
+    if (swiperRef.current) {
+      swiperRef.current.scrollTo(activeIndex, true);
+    }
+  }, [activeIndex]);
+
+  const handleGetStarted = async () => {
+    try {
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      router.replace('/(auth)');
+    } catch (error) {
+      console.error('Error saving onboarding state:', error);
+      router.replace('/(auth)');
+    }
   };
 
-  const handleSkip = () => {
-    router.replace('/(auth)');
+  const handleSkip = async () => {
+    try {
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      router.replace('/(auth)');
+    } catch (error) {
+      console.error('Error saving onboarding state:', error);
+      router.replace('/(auth)');
+    }
+  };
+
+  const handleNext = () => {
+    if (activeIndex < slides.length - 1) {
+      setActiveIndex(prevIndex => prevIndex + 1);
+    }
+  };
+
+  const renderSlides = () => {
+    return slides.map((slide) => (
+      <View key={slide.id} style={styles.slide}>
+        <Image source={slide.image} style={styles.image} resizeMode="contain" />
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{slide.title}</Text>
+          <Text style={styles.description}>{slide.description}</Text>
+        </View>
+      </View>
+    ));
   };
 
   return (
@@ -44,33 +85,47 @@ export default function Onboarding() {
       </View>
 
       <Swiper
+        ref={swiperRef}
         style={styles.wrapper}
         loop={false}
+        index={activeIndex}
+        onIndexChanged={setActiveIndex}
         dot={<View style={styles.dot} />}
         activeDot={<View style={styles.activeDot} />}
-        showsButtons={true}
-        buttonWrapperStyle={styles.buttonWrapper}
-        nextButton={<Text style={styles.nextButton}>Next</Text>}
-        prevButton={<Text style={styles.prevButton}></Text>}
+        scrollEnabled={true}
+        showsButtons={false}
+        removeClippedSubviews={false}
+        bounces={false}
+        automaticallyAdjustContentInsets={false}
       >
-        {slides.map((slide, index) => (
-          <View key={slide.id} style={styles.slide}>
-            <Image source={slide.image} style={styles.image} resizeMode="contain" />
-            <View style={styles.textContainer}>
-              <Text style={styles.title}>{slide.title}</Text>
-            </View>
-          </View>
-        ))}
+        {renderSlides()}
       </Swiper>
 
       <View style={styles.footer}>
-        <TouchableOpacity onPress={handleSkip}>
-          <Text style={styles.skipButton}>SKIP</Text>
+        <TouchableOpacity 
+          onPress={handleSkip} 
+          style={styles.skipButton}
+        >
+          <Text style={[styles.buttonText, styles.skipButtonText]}>SKIP</Text>
         </TouchableOpacity>
-        {/* Nút START chỉ hiển thị ở slide cuối */}
-        <TouchableOpacity style={styles.startButton} onPress={handleGetStarted}>
-          <Text style={styles.startButtonText}>START</Text>
-        </TouchableOpacity>
+
+        {activeIndex === slides.length - 1 ? (
+          <TouchableOpacity 
+            style={[styles.button, styles.startButton]} 
+            onPress={handleGetStarted}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.buttonText, styles.startButtonText]}>BẮT ĐẦU</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity 
+            style={[styles.button, styles.nextButton]} 
+            onPress={handleNext}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.buttonText, styles.nextButtonText]}>NEXT</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -100,18 +155,26 @@ const styles = StyleSheet.create({
   },
   image: {
     width: width * 0.8,
-    height: height * 0.5,
+    height: height * 0.4,
     marginTop: 20
   },
   textContainer: {
     alignItems: 'center',
-    marginTop: 40
+    marginTop: 40,
+    paddingHorizontal: 20
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.textPrimary,
-    textAlign: 'center'
+    textAlign: 'center',
+    marginBottom: 16
+  },
+  description: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24
   },
   dot: {
     backgroundColor: '#D8D8D8',
@@ -134,42 +197,48 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 30
+    paddingBottom: 30,
+    paddingTop: 10
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   skipButton: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    fontWeight: '600'
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  nextButton: {
+    backgroundColor: COLORS.primary,
+    minWidth: 120,
   },
   startButton: {
-    backgroundColor: '#666',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 48,
+    minWidth: 160,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  skipButtonText: {
+    color: COLORS.textSecondary,
+  },
+  nextButtonText: {
+    color: '#fff',
   },
   startButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600'
-  },
-  buttonWrapper: {
-    backgroundColor: 'transparent',
-    flexDirection: 'row',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 40,
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  nextButton: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '600'
-  },
-  prevButton: {
-    color: 'transparent'
   }
 });

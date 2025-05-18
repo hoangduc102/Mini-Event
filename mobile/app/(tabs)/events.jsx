@@ -2,6 +2,7 @@ import { View, Text, Image, TouchableOpacity, ScrollView, SafeAreaView } from 'r
 import React, { useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { styles } from '../../assets/styles/event.styles'
+import { useRouter } from 'expo-router'
 
 const COLORS = {
   primary: '#4F46E5',
@@ -144,10 +145,15 @@ export default function Events() {
     }
   ]
 
+  const router = useRouter()
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={() => router.back()}
+        >
           <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Events</Text>

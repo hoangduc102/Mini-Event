@@ -20,7 +20,6 @@ export default function RootLayout() {
         
         if (!hasSeenOnboarding) {
           router.replace("/(onboarding)");
-          await AsyncStorage.setItem('hasSeenOnboarding', 'true');
         }
         setIsReady(true);
       } catch (error) {

@@ -1,5 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Alert, SafeAreaView, Image, FlatList, ActivityIndicator, Platform } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../../assets/styles/creat.styles';
 import { useRouter } from 'expo-router'
@@ -8,6 +8,8 @@ import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore } from '../../store/authStore';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { debounce } from 'lodash';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Create() {
   const router = useRouter()
@@ -38,8 +40,18 @@ export default function Create() {
   const [showTagModal, setShowTagModal] = useState(false);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tempSelectedTags, setTempSelectedTags] = useState([]);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [dateTimeStr, setDateTimeStr] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [locationError, setLocationError] = useState(null);
+  const lastSearchRef = useRef('');
+  const [isDragging, setIsDragging] = useState(false);
+  const regionChangeTimeout = useRef(null);
 
   const TAGS = [
     'SPORTS',
@@ -56,109 +68,193 @@ export default function Create() {
   ];
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+    initializeMap();
+  }, []);
+
+  const initializeMap = async () => {
+    try {
+      setIsLoadingLocation(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
+        setLocationError('Vui lòng cho phép ứng dụng truy cập vị trí của bạn');
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      setRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+        maximumAge: 10000
       });
-    })();
-  }, []);
 
-  useEffect(() => {
-    if (showTagModal) {
-      setTempSelectedTags([...selectedTags]);
-    }
-  }, [showTagModal]);
-
-  const handleLocationInputEnd = async () => {
-    if (!location) return;
-    setIsGeocoding(true);
-    try {
-      const geo = await Location.geocodeAsync(location);
-      if (geo && geo.length > 0) {
-        const { latitude, longitude } = geo[0];
+      if (location) {
+        const { latitude, longitude } = location.coords;
         setRegion({
           latitude,
           longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         });
-        setLocationDetails({ latitude, longitude });
-        if (mapRef.current) {
-          mapRef.current.animateToRegion({
+        getAddressFromCoords(latitude, longitude);
+      }
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      setLocationError('Không thể lấy vị trí hiện tại');
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const getAddressFromCoords = useCallback(
+    debounce(async (latitude, longitude) => {
+      try {
+        setIsGeocoding(true);
+        const result = await Location.reverseGeocodeAsync({
+          latitude,
+          longitude
+        }, {
+          useGoogleMaps: true,
+          language: 'vi'
+        });
+        
+        if (result && result.length > 0) {
+          const address = result[0];
+          const addressParts = [
+            address.name,
+            address.street,
+            address.district,
+            address.city,
+            address.region,
+          ].filter(Boolean);
+          const formattedAddress = addressParts.join(', ');
+          setSelectedAddress(formattedAddress);
+          setLocation(formattedAddress);
+          if (!isDragging) {
+            setTempLocation({ latitude, longitude });
+          }
+        }
+      } catch (error) {
+        console.error('Error getting address:', error);
+        setLocationError('Không thể lấy thông tin địa chỉ');
+      } finally {
+        setIsGeocoding(false);
+      }
+    }, 500),
+    [isDragging]
+  );
+
+  const handleLocationSearch = useCallback(
+    debounce(async (query) => {
+      if (!query.trim() || query === lastSearchRef.current) return;
+      
+      try {
+        setIsGeocoding(true);
+        lastSearchRef.current = query;
+
+        const results = await Location.geocodeAsync(query, {
+          useGoogleMaps: true,
+          language: 'vi'
+        });
+
+        if (results && results.length > 0) {
+          const { latitude, longitude } = results[0];
+          const newRegion = {
             latitude,
             longitude,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
-          }, 1000);
+          };
+          
+          setRegion(newRegion);
+          if (mapRef.current && isMapReady) {
+            mapRef.current.animateToRegion(newRegion, 500);
+          }
+          
+          getAddressFromCoords(latitude, longitude);
         }
+      } catch (error) {
+        console.error('Geocoding error:', error);
+        setLocationError('Không thể tìm thấy địa điểm');
+      } finally {
+        setIsGeocoding(false);
       }
-    } catch (e) {
-      // Có thể hiển thị thông báo lỗi nếu muốn
-    }
-    setIsGeocoding(false);
-  };
+    }, 500),
+    [isMapReady]
+  );
 
-  const getAddressFromCoords = async (latitude, longitude) => {
-    try {
-      const result = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude
-      });
-      
-      if (result && result.length > 0) {
-        const address = result[0];
-        const addressParts = [
-          address.name,
-          address.street,
-          address.district,
-          address.city,
-          address.region,
-        ].filter(Boolean);
-        return addressParts.join(', ');
+  const handleMapReady = useCallback(() => {
+    setIsMapReady(true);
+  }, []);
+
+  const handleRegionChangeComplete = useCallback((newRegion) => {
+    if (regionChangeTimeout.current) {
+      clearTimeout(regionChangeTimeout.current);
+    }
+
+    regionChangeTimeout.current = setTimeout(() => {
+      setRegion(newRegion);
+      if (!isDragging) {
+        getAddressFromCoords(newRegion.latitude, newRegion.longitude);
       }
-      return null;
-    } catch (error) {
-      console.error('Error getting address:', error);
-      return null;
-    }
-  };
+    }, 150);
+  }, [isDragging, getAddressFromCoords]);
 
-  const handleMapPress = async (e) => {
+  const handleRegionChange = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
+  const handleRegionChangeEnd = useCallback(() => {
+    setIsDragging(false);
+    if (region) {
+      getAddressFromCoords(region.latitude, region.longitude);
+    }
+  }, [region]);
+
+  const handleMapPress = useCallback((e) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
-    setTempLocation({
-      latitude,
-      longitude,
-    });
-    
-    const address = await getAddressFromCoords(latitude, longitude);
-    if (address) {
-      setSelectedAddress(address);
-    }
-  };
+    setTempLocation({ latitude, longitude });
+    getAddressFromCoords(latitude, longitude);
+  }, []);
 
-  const handleConfirmLocation = async () => {
+  const handleConfirmLocation = () => {
     if (tempLocation) {
       setLocationDetails(tempLocation);
-      if (selectedAddress) {
-        setLocation(selectedAddress);
-      } else {
-        const address = await getAddressFromCoords(tempLocation.latitude, tempLocation.longitude);
-        if (address) {
-          setLocation(address);
-        } else {
-          setLocation(`${tempLocation.latitude.toFixed(6)}, ${tempLocation.longitude.toFixed(6)}`);
-        }
-      }
       setShowMap(false);
+    }
+  };
+
+  const handleGetCurrentLocation = async () => {
+    try {
+      setIsLoadingLocation(true);
+      setLocationError(null);
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationError('Vui lòng cho phép ứng dụng truy cập vị trí của bạn');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        maximumAge: 10000
+      });
+
+      const newRegion = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+
+      setRegion(newRegion);
+      if (mapRef.current && isMapReady) {
+        mapRef.current.animateToRegion(newRegion, 500);
+      }
+      
+      getAddressFromCoords(location.coords.latitude, location.coords.longitude);
+    } catch (error) {
+      console.error('Error getting current location:', error);
+      setLocationError('Không thể lấy vị trí hiện tại');
+    } finally {
+      setIsLoadingLocation(false);
     }
   };
 
@@ -208,145 +304,142 @@ export default function Create() {
     setSelectedImage(null);
   };
 
+  const formatDateTime = (date, time) => {
+    const combinedDate = new Date(date);
+    combinedDate.setHours(time.getHours());
+    combinedDate.setMinutes(time.getMinutes());
+    return combinedDate.toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
+  const onDateChange = (event, selected) => {
+    setShowDatePicker(false);
+    if (selected) {
+      setSelectedDate(selected);
+      setDateTimeStr(formatDateTime(selected, selectedTime));
+    }
+  };
+
+  const onTimeChange = (event, selected) => {
+    setShowTimePicker(false);
+    if (selected) {
+      setSelectedTime(selected);
+      setDateTimeStr(formatDateTime(selectedDate, selected));
+    }
+  };
+
+  const renderDateTimePicker = () => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>Chọn ngày và giờ</Text>
+      <View style={styles.dateTimeContainer}>
+        <TouchableOpacity 
+          style={styles.datePickerButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Ionicons name="calendar-outline" size={24} style={styles.dateIcon} />
+          <Text style={styles.dateText}>
+            {dateTimeStr || 'Chọn ngày và giờ'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.timePickerButton}
+          onPress={() => setShowTimePicker(true)}
+        >
+          <Ionicons name="time-outline" size={24} style={styles.timeIcon} />
+        </TouchableOpacity>
+      </View>
+      {showDatePicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+          minimumDate={new Date()}
+        />
+      )}
+      {showTimePicker && (
+        <DateTimePicker
+          value={selectedTime}
+          mode="time"
+          display="default"
+          onChange={onTimeChange}
+        />
+      )}
+    </View>
+  );
+
   const handleSaveEvent = async () => {
     try {
       // Kiểm tra dữ liệu đầu vào
-      if (!eventName || !date || !locationDetails || !description || selectedTags.length === 0) {
+      if (!eventName || !dateTimeStr || !locationDetails || !description || selectedTags.length === 0 || !limitPeople) {
         Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin bắt buộc');
         return;
       }
 
-      // Xử lý date
-      const dateObj = new Date(date.split('/').reverse().join('-'));
-      if (isNaN(dateObj.getTime())) {
-        Alert.alert('Lỗi', 'Ngày không hợp lệ');
-        return;
-      }
+      // Tạo datetime từ selectedDate và selectedTime
+      const combinedDate = new Date(selectedDate);
+      combinedDate.setHours(selectedTime.getHours());
+      combinedDate.setMinutes(selectedTime.getMinutes());
 
       // Chuẩn bị dữ liệu sự kiện
-      const eventDataObj = {
-        eventTag: selectedTags[0],
-        gps: enableGPS,
+      const eventData = {
         name: eventName,
-        date: {
-          seconds: Math.floor(dateObj.getTime() / 1000),
-          nanos: 0
-        },
-        address: location,
         location: {
           latitude: locationDetails.latitude,
           longitude: locationDetails.longitude
         },
+        description: description,
+        date: combinedDate.toISOString(),
         privateEvent: isPrivate,
-        limit: parseInt(limitPeople) || 0,
-        description: description
+        gps: enableGPS,
+        limit: parseInt(limitPeople),
+        eventTag: selectedTags[0],
+        address: location
       };
 
-      console.log('Event data being sent:', eventDataObj);
+      let result;
+      // Tạo FormData cho mọi trường hợp
+      const formData = new FormData();
+      
+      // Thêm dữ liệu event dưới dạng string
+      formData.append('event', JSON.stringify(eventData));
 
       if (selectedImage) {
-        try {
-          console.log('Selected image:', selectedImage);
-          
-          // Tạo FormData
-          const formData = new FormData();
-          
-          // Thêm event data
-          formData.append('event', JSON.stringify(eventDataObj));
-          
-          // Xử lý đường dẫn hình ảnh
-          let imageUri = selectedImage;
-          if (Platform.OS === 'ios' && selectedImage.startsWith('file://')) {
-            imageUri = selectedImage.replace('file://', '');
-          }
-          
-          // Thêm file hình ảnh
-          const filename = imageUri.split('/').pop();
-          const match = /\.(\w+)$/.exec(filename);
-          const extension = match ? match[1].toLowerCase() : 'jpg';
-          
-          // Chuyển đổi extension thành MIME type
-          let mimeType;
-          switch (extension) {
-            case 'jpg':
-            case 'jpeg':
-              mimeType = 'image/jpeg';
-              break;
-            case 'png':
-              mimeType = 'image/png';
-              break;
-            case 'gif':
-              mimeType = 'image/gif';
-              break;
-            default:
-              mimeType = 'image/jpeg';
-          }
-          
-          // Tạo file object
-          const imageFile = {
-            uri: imageUri,
-            type: mimeType,
-            name: `image.${extension}`
-          };
-          
-          console.log('Image file:', imageFile);
-          formData.append('image', imageFile);
-
-          console.log('FormData being sent:', formData);
-
-          // Gọi API với FormData
-          const result = await createEvent(null, formData);
-          console.log('API response:', result);
-
-          if (result.success) {
-            Alert.alert(
-              'Thành công',
-              'Sự kiện đã được tạo thành công',
-              [{ text: 'OK', onPress: () => router.back() }]
-            );
-          } else {
-            if (result.error === 'Network request failed') {
-              Alert.alert(
-                'Lỗi kết nối',
-                'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại.',
-                [{ text: 'OK' }]
-              );
-            } else {
-              console.error('Error details:', result.error);
-              Alert.alert('Lỗi', result.error || 'Tạo sự kiện thất bại');
-            }
-          }
-        } catch (error) {
-          console.error('Error processing image:', error);
-          Alert.alert('Lỗi', 'Không thể xử lý hình ảnh. Vui lòng thử lại.');
+        // Xử lý đường dẫn hình ảnh
+        let imageUri = selectedImage;
+        if (Platform.OS === 'ios' && selectedImage.startsWith('file://')) {
+          imageUri = selectedImage.replace('file://', '');
         }
+        
+        // Thêm file hình ảnh
+        const imageFile = {
+          uri: imageUri,
+          type: 'image/jpeg',
+          name: 'image.jpg'
+        };
+        formData.append('image', imageFile);
+      }
+
+      console.log('FormData parts:', formData._parts);
+      result = await createEvent(null, formData);
+      
+      if (result.success) {
+        Alert.alert(
+          'Thành công',
+          'Sự kiện đã được tạo thành công',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
       } else {
-        console.log('Sending event without image');
-        // Gọi API không có hình ảnh
-        const result = await createEvent(eventDataObj);
-        console.log('API response:', result);
-
-        if (result.success) {
-          Alert.alert(
-            'Thành công',
-            'Sự kiện đã được tạo thành công',
-            [{ text: 'OK', onPress: () => router.back() }]
-          );
-        } else {
-          if (result.error === 'Network request failed') {
-            Alert.alert(
-              'Lỗi kết nối',
-              'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại.',
-              [{ text: 'OK' }]
-            );
-          } else {
-            console.error('Error details:', result.error);
-            Alert.alert('Lỗi', result.error || 'Tạo sự kiện thất bại');
-          }
-        }
+        Alert.alert('Lỗi', result.error || 'Tạo sự kiện thất bại');
       }
     } catch (error) {
-      console.error('Full error details:', error);
+      console.error('Error creating event:', error);
       Alert.alert('Lỗi', error.message || 'Không thể tạo sự kiện. Vui lòng thử lại sau.');
     }
   };
@@ -376,13 +469,120 @@ export default function Create() {
     });
   };
 
-  const onDateChange = (event, selected) => {
-    setShowDatePicker(false);
-    if (selected) {
-      setSelectedDate(selected);
-      setDate(formatDate(selected));
-    }
-  };
+  const renderMapModal = () => (
+    <Modal
+      visible={showMap}
+      animationType="slide"
+      onRequestClose={() => setShowMap(false)}
+    >
+      <View style={styles.mapContainer}>
+        <SafeAreaView>
+          <View style={styles.mapHeader}>
+            <TouchableOpacity 
+              style={styles.mapHeaderButton} 
+              onPress={() => setShowMap(false)}
+            >
+              <Ionicons name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.mapTitle}>Chọn địa điểm</Text>
+            <View style={{ width: 40 }} />
+          </View>
+        </SafeAreaView>
+
+        <View style={styles.mapSearchContainer}>
+          <View style={styles.searchInputContainer}>
+            <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+            <TextInput
+              style={styles.mapSearchInput}
+              placeholder="Tìm kiếm địa điểm"
+              value={searchQuery}
+              onChangeText={(text) => {
+                setSearchQuery(text);
+                setLocationError(null);
+                handleLocationSearch(text);
+              }}
+              editable={!isGeocoding}
+            />
+            {isGeocoding && (
+              <ActivityIndicator size="small" color="#4299E1" style={styles.searchLoader} />
+            )}
+          </View>
+          {locationError && (
+            <Text style={styles.errorText}>{locationError}</Text>
+          )}
+        </View>
+
+        {isLoadingLocation ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4299E1" />
+            <Text style={styles.loadingText}>Đang tải bản đồ...</Text>
+          </View>
+        ) : (
+          <>
+            <MapView
+              ref={mapRef}
+              provider={PROVIDER_GOOGLE}
+              style={styles.map}
+              region={region}
+              onRegionChangeComplete={handleRegionChangeComplete}
+              onRegionChange={handleRegionChange}
+              onPanDrag={() => setIsDragging(true)}
+              onTouchEnd={handleRegionChangeEnd}
+              onPress={handleMapPress}
+              onMapReady={handleMapReady}
+              showsUserLocation
+              showsMyLocationButton={false}
+              loadingEnabled
+              loadingIndicatorColor="#4299E1"
+              loadingBackgroundColor="#fff"
+              minZoomLevel={5}
+              maxZoomLevel={20}
+            />
+
+            <View style={styles.markerFixed}>
+              <Ionicons name="location" size={40} color="#4299E1" />
+            </View>
+
+            <TouchableOpacity 
+              style={[
+                styles.currentLocationButton,
+                isLoadingLocation && styles.buttonDisabled
+              ]}
+              onPress={handleGetCurrentLocation}
+              disabled={isLoadingLocation}
+            >
+              {isLoadingLocation ? (
+                <ActivityIndicator size="small" color="#4299E1" />
+              ) : (
+                <Ionicons name="navigate" size={24} color="#4299E1" />
+              )}
+            </TouchableOpacity>
+
+            {selectedAddress && (
+              <View style={styles.selectedLocationContainer}>
+                <Text style={styles.selectedLocationText}>
+                  {selectedAddress}
+                </Text>
+              </View>
+            )}
+
+            <TouchableOpacity 
+              style={[
+                styles.confirmLocationButton,
+                !tempLocation && styles.confirmLocationButtonDisabled
+              ]}
+              onPress={handleConfirmLocation}
+              disabled={!tempLocation}
+            >
+              <Text style={styles.confirmLocationText}>
+                {tempLocation ? 'Xác nhận vị trí' : 'Vui lòng chọn vị trí'}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+    </Modal>
+  );
 
   return (
     <ScrollView style={styles.container}>
@@ -404,27 +604,7 @@ export default function Create() {
           />
         </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Select Date</Text>
-          <TouchableOpacity 
-            style={styles.datePickerButton}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Ionicons name="calendar-outline" size={24} style={styles.dateIcon} />
-            <Text style={styles.dateText}>
-              {date || 'Chọn ngày'}
-            </Text>
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={selectedDate}
-              mode="date"
-              display="default"
-              onChange={onDateChange}
-              minimumDate={new Date()}
-            />
-          )}
-        </View>
+        {renderDateTimePicker()}
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Location</Text>
@@ -555,94 +735,7 @@ export default function Create() {
         </View>
       </View>
 
-      <Modal
-        visible={showMap}
-        animationType="slide"
-        onRequestClose={() => setShowMap(false)}
-      >
-        <View style={styles.mapContainer}>
-          <SafeAreaView>
-            <View style={styles.mapHeader}>
-              <TouchableOpacity onPress={() => setShowMap(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-              <Text style={styles.mapTitle}>Chọn địa điểm</Text>
-              <View style={{width: 24}} />
-            </View>
-          </SafeAreaView>
-
-          <View style={styles.mapSearchContainer}>
-            <TextInput
-              style={styles.mapSearchInput}
-              placeholder="Tìm kiếm địa điểm"
-              value={location}
-              onChangeText={setLocation}
-              onEndEditing={handleLocationInputEnd}
-              editable={!isGeocoding}
-            />
-          </View>
-
-          <View style={styles.markerFixed}>
-            <Ionicons name="location" size={48} color="#4A90E2" />
-          </View>
-
-          <MapView
-            ref={mapRef}
-            provider={PROVIDER_GOOGLE}
-            style={{ flex: 1 }}
-            region={region}
-            onRegionChangeComplete={setRegion}
-            onPress={handleMapPress}
-            showsUserLocation={true}
-          >
-            {tempLocation && (
-              <Marker
-                coordinate={{
-                  latitude: tempLocation.latitude,
-                  longitude: tempLocation.longitude,
-                }}
-              />
-            )}
-          </MapView>
-
-          <TouchableOpacity 
-            style={styles.currentLocationButton}
-            onPress={async () => {
-              let { status } = await Location.requestForegroundPermissionsAsync();
-              if (status !== 'granted') {
-                Alert.alert('Permission denied', 'Please allow location access to use this feature');
-                return;
-              }
-              let location = await Location.getCurrentPositionAsync({});
-              const newRegion = {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              };
-              setRegion(newRegion);
-              mapRef.current?.animateToRegion(newRegion, 1000);
-            }}
-          >
-            <Ionicons name="navigate" size={24} color="#4A90E2" />
-          </TouchableOpacity>
-
-          {tempLocation && (
-            <View style={styles.selectedLocationContainer}>
-              <Text style={styles.selectedLocationText}>
-                {selectedAddress || 'Đang tải địa chỉ...'}
-              </Text>
-            </View>
-          )}
-
-          <TouchableOpacity 
-            style={styles.confirmLocationButton}
-            onPress={handleConfirmLocation}
-          >
-            <Text style={styles.confirmLocationText}>Xác nhận vị trí</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
+      {renderMapModal()}
 
       <Modal
         visible={showTagModal}

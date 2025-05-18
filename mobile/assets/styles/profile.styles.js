@@ -5,6 +5,29 @@ import COLORS from "../../constants/colors";
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+  debugSection: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+  },
+  debugTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: COLORS.textPrimary,
+  },
+  resetButton: {
+    backgroundColor: '#ff6b6b',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  resetButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
