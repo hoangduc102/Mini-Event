@@ -52,6 +52,7 @@ export default function Create() {
   const lastSearchRef = useRef('');
   const [isDragging, setIsDragging] = useState(false);
   const regionChangeTimeout = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const TAGS = [
     'SPORTS',
@@ -382,42 +383,67 @@ export default function Create() {
         return;
       }
 
+      // Kiểm tra số lượng người tham gia
+      const limit = parseInt(limitPeople);
+      if (isNaN(limit) || limit <= 0) {
+        Alert.alert('Lỗi', 'Số lượng người tham gia phải lớn hơn 0');
+        return;
+      }
+
       // Tạo datetime từ selectedDate và selectedTime
       const combinedDate = new Date(selectedDate);
       combinedDate.setHours(selectedTime.getHours());
       combinedDate.setMinutes(selectedTime.getMinutes());
 
+      // Kiểm tra thời gian sự kiện
+      if (combinedDate < new Date()) {
+        Alert.alert('Lỗi', 'Thời gian sự kiện phải lớn hơn thời gian hiện tại');
+        return;
+      }
+
+      // Kiểm tra độ dài các trường
+      if (eventName.length > 100) {
+        Alert.alert('Lỗi', 'Tên sự kiện không được vượt quá 100 ký tự');
+        return;
+      }
+
+      if (description.length > 1000) {
+        Alert.alert('Lỗi', 'Mô tả sự kiện không được vượt quá 1000 ký tự');
+        return;
+      }
+
+      if (location.length > 200) {
+        Alert.alert('Lỗi', 'Địa chỉ không được vượt quá 200 ký tự');
+        return;
+      }
+
+      setIsSubmitting(true);
+
       // Chuẩn bị dữ liệu sự kiện
       const eventData = {
-        name: eventName,
-        location: {
-          latitude: locationDetails.latitude,
-          longitude: locationDetails.longitude
-        },
-        description: description,
-        date: combinedDate.toISOString(),
-        privateEvent: isPrivate,
+        name: eventName.trim(),
+        address: location.trim(),
+        location: locationDetails
+          ? { latitude: locationDetails.latitude, longitude: locationDetails.longitude }
+          : null,
         gps: enableGPS,
-        limit: parseInt(limitPeople),
+        date: combinedDate.toISOString(),
+        description: description.trim(),
         eventTag: selectedTags[0],
-        address: location
+        limit: limit,
+        privateEvent: isPrivate
       };
 
-      let result;
-      // Tạo FormData cho mọi trường hợp
+      // Tạo FormData
       const formData = new FormData();
-      
-      // Thêm dữ liệu event dưới dạng string
       formData.append('event', JSON.stringify(eventData));
 
       if (selectedImage) {
-        // Xử lý đường dẫn hình ảnh
         let imageUri = selectedImage;
         if (Platform.OS === 'ios' && selectedImage.startsWith('file://')) {
           imageUri = selectedImage.replace('file://', '');
         }
         
-        // Thêm file hình ảnh
         const imageFile = {
           uri: imageUri,
           type: 'image/jpeg',
@@ -427,7 +453,7 @@ export default function Create() {
       }
 
       console.log('FormData parts:', formData._parts);
-      result = await createEvent(null, formData);
+      const result = await createEvent(null, formData);
       
       if (result.success) {
         Alert.alert(
@@ -441,6 +467,8 @@ export default function Create() {
     } catch (error) {
       console.error('Error creating event:', error);
       Alert.alert('Lỗi', error.message || 'Không thể tạo sự kiện. Vui lòng thử lại sau.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -718,15 +746,19 @@ export default function Create() {
           <TouchableOpacity 
             style={styles.cancelButton}
             onPress={() => router.back()}
+            disabled={isSubmitting}
           >
             <Text style={styles.cancelButtonText}>Hủy</Text>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.saveButton, isLoading && { opacity: 0.7 }]}
+            style={[
+              styles.saveButton, 
+              (isLoading || isSubmitting) && { opacity: 0.7 }
+            ]}
             onPress={handleSaveEvent}
-            disabled={isLoading}
+            disabled={isLoading || isSubmitting}
           >
-            {isLoading ? (
+            {(isLoading || isSubmitting) ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.saveButtonText}>Lưu</Text>

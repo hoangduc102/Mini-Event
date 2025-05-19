@@ -339,7 +339,7 @@ export const useAuthStore = create((set, get) => ({
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
-          'Content-Type': 'multipart/form-data'
+          // 'Content-Type': 'multipart/form-data'
         }
       });
 
