@@ -182,7 +182,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const token = await AsyncStorage.getItem('token');
       const userJson = await AsyncStorage.getItem('user');
-      
+
       if (!token || !userJson) {
         return false;
       }
@@ -227,7 +227,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
-      
+
       // Reset state trong authStore
       set({
         user: null,
@@ -235,11 +235,11 @@ export const useAuthStore = create((set, get) => ({
         isLoading: false,
         error: null
       });
-      
+
       // Reset state trong eventStore
       const { resetEvents: resetEventStore } = useEventStore.getState();
       resetEventStore();
-      
+
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
@@ -264,7 +264,7 @@ export const useAuthStore = create((set, get) => ({
       });
 
       const responseData = await response.json();
-      
+
       if (responseData.status !== 200) {
         throw new Error(responseData.message || "Something went wrong");
       }
@@ -291,19 +291,30 @@ export const useAuthStore = create((set, get) => ({
   createEvent: async (eventData, formData) => {
     set({ isLoading: true });
     try {
+      console.log('Bắt đầu tạo sự kiện...');
+      console.log('Event Data chi tiết:', JSON.stringify(eventData, null, 2));
+      console.log('Form Data chi tiết:', JSON.stringify(Array.from(formData._parts), null, 2));
+      console.log('Form Data có phải FormData không:', formData instanceof FormData);
+      console.log('Form Data entries:', Array.from(formData.entries()));
+
       const token = await AsyncStorage.getItem('token');
       if (!token) throw new Error('Vui lòng đăng nhập để tạo sự kiện');
+      console.log('Token length:', token.length);
 
       // Kiểm tra token có hợp lệ không
+      console.log('Kiểm tra token...');
       const userResponse = await axios.get(`${API_BASE_URL}/users/info`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+      console.log('Token check response:', userResponse.status);
+      console.log('User info response:', userResponse.data);
 
       // Nếu token hết hạn
       if (userResponse.status === 401) {
+        console.log('Token hết hạn, đang refresh...');
         // Lấy refresh token từ AsyncStorage
         const refreshToken = await AsyncStorage.getItem('refreshToken');
         if (!refreshToken) {
@@ -312,7 +323,7 @@ export const useAuthStore = create((set, get) => ({
         }
 
         // Gọi Firebase để refresh token
-        const response = await axios.post(`https://securetoken.googleapis.com/v1/token?key=${FIREBASE_APIKEY}`, 
+        const response = await axios.post(`https://securetoken.googleapis.com/v1/token?key=${FIREBASE_APIKEY}`,
           `grant_type=refresh_token&refresh_token=${refreshToken}`,
           {
             headers: {
@@ -333,22 +344,41 @@ export const useAuthStore = create((set, get) => ({
         token = response.data.id_token;
       }
 
-      console.log('Request body:', formData._parts);
+      console.log('Gửi request tạo sự kiện...');
+      console.log('Request URL:', `${API_BASE_URL}/events`);
+      console.log('Request Headers:', {
+        'Authorization': `Bearer ${token.substring(0, 10)}...`,
+        'Accept': 'application/json'
+      });
 
       const response = await axios.post(`${API_BASE_URL}/events`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
-          // 'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data'
+        },
+        transformRequest: [(data) => {
+          console.log('Transform Request Data:', data);
+          return data;
+        }],
+        timeout: 30000,
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        validateStatus: function (status) {
+          return status >= 200 && status < 500;
         }
       });
 
-      console.log('Response:', response.data);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      console.log('Response data:', response.data);
 
       if (response.data.status !== 200) {
+        console.error('Lỗi từ server:', response.data);
         throw new Error(response.data.message || 'Tạo sự kiện thất bại');
       }
 
+      console.log('Tạo sự kiện thành công!');
       // Cập nhật lại thông tin user sau khi tạo sự kiện thành công
       await get().getUserInfo();
 
@@ -439,10 +469,10 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       // Set loading state tương ứng
-      set({ 
+      set({
         isLoading: !isLoadMore,
         isLoadingMore: isLoadMore,
-        error: null 
+        error: null
       });
 
       const token = get().token;
@@ -451,14 +481,14 @@ export const useAuthStore = create((set, get) => ({
       // Nếu không có token, trả về mảng rỗng
       if (!token) {
         console.log('No token available');
-        set({ 
+        set({
           events: [],
           isLoading: false,
           isLoadingMore: false
         });
-        return { 
-          success: false, 
-          error: 'Vui lòng đăng nhập để xem danh sách sự kiện' 
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để xem danh sách sự kiện'
         };
       }
 
@@ -490,7 +520,7 @@ export const useAuthStore = create((set, get) => ({
       const lastDate = get().lastDate;
       const pageSize = get().pageSize;
       let url = `${API_BASE_URL}/events?pageSize=${pageSize}`;
-      
+
       if (lastDate && isLoadMore) {
         url += `&lastDate=${encodeURIComponent(lastDate)}`;
       }
@@ -519,7 +549,7 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const responseData = await response.json();
-      
+
       if (responseData.status !== 200) {
         throw new Error(responseData.message || "Có lỗi xảy ra");
       }
@@ -533,10 +563,10 @@ export const useAuthStore = create((set, get) => ({
       console.log('API Response - Events count:', events.length);
       console.log('API Response - First event:', events[0]);
       console.log('API Response - Last event:', events[events.length - 1]);
-      
+
       // Chỉ cập nhật lastDate nếu có events được trả về
       const newLastDate = events.length > 0 ? events[events.length - 1].date : get().lastDate;
-      
+
       const currentEvents = get().events;
       const updatedEvents = isLoadMore ? [...currentEvents, ...events] : events;
 
@@ -555,7 +585,7 @@ export const useAuthStore = create((set, get) => ({
       };
     } catch (error) {
       console.error('Error in getEvents:', error);
-      set({ 
+      set({
         isLoading: false,
         isLoadingMore: false,
         error: error.message
@@ -567,14 +597,14 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Thêm function mới để lấy events đã tham dự
+  //lấy events đã tham dự
   getAttendedEvents: async () => {
     try {
       const token = get().token;
       if (!token) {
-        return { 
-          success: false, 
-          error: 'Vui lòng đăng nhập để xem danh sách sự kiện đã tham dự' 
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để xem danh sách sự kiện đã tham dự'
         };
       }
 
@@ -590,7 +620,7 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const responseData = await response.json();
-      
+
       if (responseData.status !== 200) {
         throw new Error(responseData.message || "Có lỗi xảy ra");
       }
@@ -608,14 +638,14 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // Thêm function để đăng ký tham gia event
+  //đăng ký tham gia event
   registerEvent: async (eventId) => {
     try {
       const token = get().token;
       if (!token) {
-        return { 
-          success: false, 
-          error: 'Vui lòng đăng nhập để đăng ký tham gia sự kiện' 
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để đăng ký tham gia sự kiện'
         };
       }
 

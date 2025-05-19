@@ -1,30 +1,44 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Alert, SafeAreaView, Image, FlatList, ActivityIndicator, Platform } from 'react-native';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import styles from '../../assets/styles/creat.styles';
-import { useRouter } from 'expo-router'
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import * as Location from 'expo-location';
-import * as ImagePicker from 'expo-image-picker';
-import { useAuthStore } from '../../store/authStore';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { debounce } from 'lodash';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Modal,
+  Alert,
+  SafeAreaView,
+  Image,
+  FlatList,
+  ActivityIndicator,
+  Platform,
+} from "react-native";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import styles from "../../assets/styles/creat.styles";
+import { useRouter } from "expo-router";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import * as Location from "expo-location";
+import * as ImagePicker from "expo-image-picker";
+import { useAuthStore } from "../../store/authStore";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { debounce } from "lodash";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Create() {
-  const router = useRouter()
+  const router = useRouter();
   const { createEvent, isLoading } = useAuthStore();
   const mapRef = useRef(null);
-  
-  const [eventName, setEventName] = useState('');
-  const [date, setDate] = useState('');
-  const [location, setLocation] = useState('');
+
+  const [eventName, setEventName] = useState("");
+  const [date, setDate] = useState("");
+  const [location, setLocation] = useState("");
   const [locationDetails, setLocationDetails] = useState(null);
   const [showMap, setShowMap] = useState(false);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [enableGPS, setEnableGPS] = useState(false);
-  const [limitPeople, setLimitPeople] = useState('');
+  const [limitPeople, setLimitPeople] = useState("");
   const [tag, setTag] = useState(false);
   const [region, setRegion] = useState({
     latitude: 10.762622,
@@ -33,7 +47,7 @@ export default function Create() {
     longitudeDelta: 0.0421,
   });
   const [isGeocoding, setIsGeocoding] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState('');
+  const [selectedAddress, setSelectedAddress] = useState("");
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [tempLocation, setTempLocation] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -44,28 +58,28 @@ export default function Create() {
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [dateTimeStr, setDateTimeStr] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [dateTimeStr, setDateTimeStr] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isMapReady, setIsMapReady] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
-  const lastSearchRef = useRef('');
+  const lastSearchRef = useRef("");
   const [isDragging, setIsDragging] = useState(false);
   const regionChangeTimeout = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const TAGS = [
-    'SPORTS',
-    'EDUCATION',
-    'TECHNOLOGY',
-    'ENTERTAINMENT',
-    'BUSINESS',
-    'HEALTH',
-    'MUSIC',
-    'ART',
-    'FOOD',
-    'TRAVEL',
-    'CHARITY'
+    "SPORTS",
+    "EDUCATION",
+    "TECHNOLOGY",
+    "ENTERTAINMENT",
+    "BUSINESS",
+    "HEALTH",
+    "MUSIC",
+    "ART",
+    "FOOD",
+    "TRAVEL",
+    "CHARITY",
   ];
 
   useEffect(() => {
@@ -76,14 +90,14 @@ export default function Create() {
     try {
       setIsLoadingLocation(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocationError('Vui lòng cho phép ứng dụng truy cập vị trí của bạn');
+      if (status !== "granted") {
+        setLocationError("Vui lòng cho phép ứng dụng truy cập vị trí của bạn");
         return;
       }
 
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
-        maximumAge: 10000
+        maximumAge: 10000,
       });
 
       if (location) {
@@ -97,8 +111,8 @@ export default function Create() {
         getAddressFromCoords(latitude, longitude);
       }
     } catch (error) {
-      console.error('Error initializing map:', error);
-      setLocationError('Không thể lấy vị trí hiện tại');
+      console.error("Error initializing map:", error);
+      setLocationError("Không thể lấy vị trí hiện tại");
     } finally {
       setIsLoadingLocation(false);
     }
@@ -108,14 +122,17 @@ export default function Create() {
     debounce(async (latitude, longitude) => {
       try {
         setIsGeocoding(true);
-        const result = await Location.reverseGeocodeAsync({
-          latitude,
-          longitude
-        }, {
-          useGoogleMaps: true,
-          language: 'vi'
-        });
-        
+        const result = await Location.reverseGeocodeAsync(
+          {
+            latitude,
+            longitude,
+          },
+          {
+            useGoogleMaps: true,
+            language: "vi",
+          }
+        );
+
         if (result && result.length > 0) {
           const address = result[0];
           const addressParts = [
@@ -125,7 +142,7 @@ export default function Create() {
             address.city,
             address.region,
           ].filter(Boolean);
-          const formattedAddress = addressParts.join(', ');
+          const formattedAddress = addressParts.join(", ");
           setSelectedAddress(formattedAddress);
           setLocation(formattedAddress);
           if (!isDragging) {
@@ -133,8 +150,8 @@ export default function Create() {
           }
         }
       } catch (error) {
-        console.error('Error getting address:', error);
-        setLocationError('Không thể lấy thông tin địa chỉ');
+        console.error("Error getting address:", error);
+        setLocationError("Không thể lấy thông tin địa chỉ");
       } finally {
         setIsGeocoding(false);
       }
@@ -145,14 +162,14 @@ export default function Create() {
   const handleLocationSearch = useCallback(
     debounce(async (query) => {
       if (!query.trim() || query === lastSearchRef.current) return;
-      
+
       try {
         setIsGeocoding(true);
         lastSearchRef.current = query;
 
         const results = await Location.geocodeAsync(query, {
           useGoogleMaps: true,
-          language: 'vi'
+          language: "vi",
         });
 
         if (results && results.length > 0) {
@@ -163,17 +180,17 @@ export default function Create() {
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           };
-          
+
           setRegion(newRegion);
           if (mapRef.current && isMapReady) {
             mapRef.current.animateToRegion(newRegion, 500);
           }
-          
+
           getAddressFromCoords(latitude, longitude);
         }
       } catch (error) {
-        console.error('Geocoding error:', error);
-        setLocationError('Không thể tìm thấy địa điểm');
+        console.error("Geocoding error:", error);
+        setLocationError("Không thể tìm thấy địa điểm");
       } finally {
         setIsGeocoding(false);
       }
@@ -185,18 +202,21 @@ export default function Create() {
     setIsMapReady(true);
   }, []);
 
-  const handleRegionChangeComplete = useCallback((newRegion) => {
-    if (regionChangeTimeout.current) {
-      clearTimeout(regionChangeTimeout.current);
-    }
-
-    regionChangeTimeout.current = setTimeout(() => {
-      setRegion(newRegion);
-      if (!isDragging) {
-        getAddressFromCoords(newRegion.latitude, newRegion.longitude);
+  const handleRegionChangeComplete = useCallback(
+    (newRegion) => {
+      if (regionChangeTimeout.current) {
+        clearTimeout(regionChangeTimeout.current);
       }
-    }, 150);
-  }, [isDragging, getAddressFromCoords]);
+
+      regionChangeTimeout.current = setTimeout(() => {
+        setRegion(newRegion);
+        if (!isDragging) {
+          getAddressFromCoords(newRegion.latitude, newRegion.longitude);
+        }
+      }, 150);
+    },
+    [isDragging, getAddressFromCoords]
+  );
 
   const handleRegionChange = useCallback(() => {
     setIsDragging(true);
@@ -228,14 +248,14 @@ export default function Create() {
       setLocationError(null);
 
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocationError('Vui lòng cho phép ứng dụng truy cập vị trí của bạn');
+      if (status !== "granted") {
+        setLocationError("Vui lòng cho phép ứng dụng truy cập vị trí của bạn");
         return;
       }
 
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
-        maximumAge: 10000
+        maximumAge: 10000,
       });
 
       const newRegion = {
@@ -249,11 +269,11 @@ export default function Create() {
       if (mapRef.current && isMapReady) {
         mapRef.current.animateToRegion(newRegion, 500);
       }
-      
+
       getAddressFromCoords(location.coords.latitude, location.coords.longitude);
     } catch (error) {
-      console.error('Error getting current location:', error);
-      setLocationError('Không thể lấy vị trí hiện tại');
+      console.error("Error getting current location:", error);
+      setLocationError("Không thể lấy vị trí hiện tại");
     } finally {
       setIsLoadingLocation(false);
     }
@@ -261,9 +281,12 @@ export default function Create() {
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Cần quyền truy cập', 'Vui lòng cho phép ứng dụng truy cập vào thư viện ảnh');
+
+    if (status !== "granted") {
+      Alert.alert(
+        "Cần quyền truy cập",
+        "Vui lòng cho phép ứng dụng truy cập vào thư viện ảnh"
+      );
       return;
     }
 
@@ -309,13 +332,13 @@ export default function Create() {
     const combinedDate = new Date(date);
     combinedDate.setHours(time.getHours());
     combinedDate.setMinutes(time.getMinutes());
-    return combinedDate.toLocaleString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
+    return combinedDate.toLocaleString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
     });
   };
 
@@ -339,16 +362,16 @@ export default function Create() {
     <View style={styles.inputGroup}>
       <Text style={styles.label}>Chọn ngày và giờ</Text>
       <View style={styles.dateTimeContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.datePickerButton}
           onPress={() => setShowDatePicker(true)}
         >
           <Ionicons name="calendar-outline" size={24} style={styles.dateIcon} />
           <Text style={styles.dateText}>
-            {dateTimeStr || 'Chọn ngày và giờ'}
+            {dateTimeStr || "Chọn ngày và giờ"}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.timePickerButton}
           onPress={() => setShowTimePicker(true)}
         >
@@ -375,18 +398,45 @@ export default function Create() {
     </View>
   );
 
+  const resetForm = () => {
+    setEventName("");
+    setDate("");
+    setLocation("");
+    setLocationDetails(null);
+    setDescription("");
+    setIsPrivate(false);
+    setEnableGPS(false);
+    setLimitPeople("");
+    setTag(false);
+    setSelectedImage(null);
+    setSelectedTags([]);
+    setSelectedDate(new Date());
+    setSelectedTime(new Date());
+    setDateTimeStr("");
+    setSearchQuery("");
+    setSelectedAddress("");
+    setTempLocation(null);
+  };
+
   const handleSaveEvent = async () => {
     try {
       // Kiểm tra dữ liệu đầu vào
-      if (!eventName || !dateTimeStr || !locationDetails || !description || selectedTags.length === 0 || !limitPeople) {
-        Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin bắt buộc');
+      if (
+        !eventName ||
+        !dateTimeStr ||
+        !locationDetails ||
+        !description ||
+        selectedTags.length === 0 ||
+        !limitPeople
+      ) {
+        Alert.alert("Lỗi", "Vui lòng điền đầy đủ thông tin bắt buộc");
         return;
       }
 
       // Kiểm tra số lượng người tham gia
       const limit = parseInt(limitPeople);
       if (isNaN(limit) || limit <= 0) {
-        Alert.alert('Lỗi', 'Số lượng người tham gia phải lớn hơn 0');
+        Alert.alert("Lỗi", "Số lượng người tham gia phải lớn hơn 0");
         return;
       }
 
@@ -397,23 +447,23 @@ export default function Create() {
 
       // Kiểm tra thời gian sự kiện
       if (combinedDate < new Date()) {
-        Alert.alert('Lỗi', 'Thời gian sự kiện phải lớn hơn thời gian hiện tại');
+        Alert.alert("Lỗi", "Thời gian sự kiện phải lớn hơn thời gian hiện tại");
         return;
       }
 
       // Kiểm tra độ dài các trường
       if (eventName.length > 100) {
-        Alert.alert('Lỗi', 'Tên sự kiện không được vượt quá 100 ký tự');
+        Alert.alert("Lỗi", "Tên sự kiện không được vượt quá 100 ký tự");
         return;
       }
 
       if (description.length > 1000) {
-        Alert.alert('Lỗi', 'Mô tả sự kiện không được vượt quá 1000 ký tự');
+        Alert.alert("Lỗi", "Mô tả sự kiện không được vượt quá 1000 ký tự");
         return;
       }
 
       if (location.length > 200) {
-        Alert.alert('Lỗi', 'Địa chỉ không được vượt quá 200 ký tự');
+        Alert.alert("Lỗi", "Địa chỉ không được vượt quá 200 ký tự");
         return;
       }
 
@@ -424,49 +474,62 @@ export default function Create() {
         name: eventName.trim(),
         address: location.trim(),
         location: locationDetails
-          ? { latitude: locationDetails.latitude, longitude: locationDetails.longitude }
+          ? {
+              latitude: locationDetails.latitude,
+              longitude: locationDetails.longitude,
+            }
           : null,
         gps: enableGPS,
         date: combinedDate.toISOString(),
         description: description.trim(),
         eventTag: selectedTags[0],
         limit: limit,
-        privateEvent: isPrivate
+        privateEvent: isPrivate,
       };
 
       // Tạo FormData
       const formData = new FormData();
-      formData.append('event', JSON.stringify(eventData));
+      formData.append("event", {
+        string: JSON.stringify(eventData),
+        type: "application/json",
+      });
 
       if (selectedImage) {
         let imageUri = selectedImage;
-        if (Platform.OS === 'ios' && selectedImage.startsWith('file://')) {
-          imageUri = selectedImage.replace('file://', '');
+        if (Platform.OS === "ios" && selectedImage.startsWith("file://")) {
+          imageUri = selectedImage.replace("file://", "");
         }
-        
+
         const imageFile = {
           uri: imageUri,
-          type: 'image/jpeg',
-          name: 'image.jpg'
+          type: "image/jpeg",
+          name: "image.jpg",
         };
-        formData.append('image', imageFile);
+        formData.append("image", imageFile);
       }
 
-      console.log('FormData parts:', formData._parts);
+      console.log("FormData parts:", formData._parts);
       const result = await createEvent(null, formData);
-      
+
       if (result.success) {
-        Alert.alert(
-          'Thành công',
-          'Sự kiện đã được tạo thành công',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
+        Alert.alert("Thành công", "Sự kiện đã được tạo thành công", [
+          { 
+            text: "OK", 
+            onPress: () => {
+              resetForm();
+              router.replace("/");
+            }
+          },
+        ]);
       } else {
-        Alert.alert('Lỗi', result.error || 'Tạo sự kiện thất bại');
+        Alert.alert("Lỗi", result.error || "Tạo sự kiện thất bại");
       }
     } catch (error) {
-      console.error('Error creating event:', error);
-      Alert.alert('Lỗi', error.message || 'Không thể tạo sự kiện. Vui lòng thử lại sau.');
+      console.error("Error creating event:", error);
+      Alert.alert(
+        "Lỗi",
+        error.message || "Không thể tạo sự kiện. Vui lòng thử lại sau."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -476,12 +539,16 @@ export default function Create() {
     <TouchableOpacity
       style={[
         styles.tagItem,
-        tempSelectedTags.includes(item) && styles.selectedTag
+        tempSelectedTags.includes(item) && styles.selectedTag,
       ]}
       onPress={() => handleTagSelect(item)}
     >
       <Ionicons
-        name={tempSelectedTags.includes(item) ? "radio-button-on" : "radio-button-off"}
+        name={
+          tempSelectedTags.includes(item)
+            ? "radio-button-on"
+            : "radio-button-off"
+        }
         size={24}
         color="#4A90E2"
       />
@@ -490,10 +557,10 @@ export default function Create() {
   );
 
   const formatDate = (date) => {
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
@@ -506,8 +573,8 @@ export default function Create() {
       <View style={styles.mapContainer}>
         <SafeAreaView>
           <View style={styles.mapHeader}>
-            <TouchableOpacity 
-              style={styles.mapHeaderButton} 
+            <TouchableOpacity
+              style={styles.mapHeaderButton}
               onPress={() => setShowMap(false)}
             >
               <Ionicons name="close" size={24} color="#333" />
@@ -519,7 +586,12 @@ export default function Create() {
 
         <View style={styles.mapSearchContainer}>
           <View style={styles.searchInputContainer}>
-            <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+            <Ionicons
+              name="search"
+              size={20}
+              color="#666"
+              style={styles.searchIcon}
+            />
             <TextInput
               style={styles.mapSearchInput}
               placeholder="Tìm kiếm địa điểm"
@@ -532,7 +604,11 @@ export default function Create() {
               editable={!isGeocoding}
             />
             {isGeocoding && (
-              <ActivityIndicator size="small" color="#4299E1" style={styles.searchLoader} />
+              <ActivityIndicator
+                size="small"
+                color="#4299E1"
+                style={styles.searchLoader}
+              />
             )}
           </View>
           {locationError && (
@@ -571,10 +647,10 @@ export default function Create() {
               <Ionicons name="location" size={40} color="#4299E1" />
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.currentLocationButton,
-                isLoadingLocation && styles.buttonDisabled
+                isLoadingLocation && styles.buttonDisabled,
               ]}
               onPress={handleGetCurrentLocation}
               disabled={isLoadingLocation}
@@ -594,16 +670,16 @@ export default function Create() {
               </View>
             )}
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.confirmLocationButton,
-                !tempLocation && styles.confirmLocationButtonDisabled
+                !tempLocation && styles.confirmLocationButtonDisabled,
               ]}
               onPress={handleConfirmLocation}
               disabled={!tempLocation}
             >
               <Text style={styles.confirmLocationText}>
-                {tempLocation ? 'Xác nhận vị trí' : 'Vui lòng chọn vị trí'}
+                {tempLocation ? "Xác nhận vị trí" : "Vui lòng chọn vị trí"}
               </Text>
             </TouchableOpacity>
           </>
@@ -615,7 +691,7 @@ export default function Create() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} >
+        <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Create New Event</Text>
@@ -636,13 +712,22 @@ export default function Create() {
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Location</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.locationInput}
             onPress={() => setShowMap(true)}
           >
-            <Ionicons name="location-outline" size={24} style={styles.locationIcon} />
-            <Text style={[styles.locationText, !location && styles.locationPlaceholder]}>
-              {location || 'Chọn vị trí sự kiện'}
+            <Ionicons
+              name="location-outline"
+              size={24}
+              style={styles.locationIcon}
+            />
+            <Text
+              style={[
+                styles.locationText,
+                !location && styles.locationPlaceholder,
+              ]}
+            >
+              {location || "Chọn vị trí sự kiện"}
             </Text>
             <Ionicons name="chevron-forward" size={24} color="#999" />
           </TouchableOpacity>
@@ -662,11 +747,13 @@ export default function Create() {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Event Type</Text>
           <View style={styles.checkboxContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.checkbox, isPrivate && styles.checkboxChecked]}
               onPress={() => setIsPrivate(!isPrivate)}
             >
-              {isPrivate && <Ionicons name="checkmark" size={16} color="white" />}
+              {isPrivate && (
+                <Ionicons name="checkmark" size={16} color="white" />
+              )}
             </TouchableOpacity>
             <Text style={styles.checkboxLabel}>Private Event</Text>
           </View>
@@ -675,11 +762,13 @@ export default function Create() {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Enable Checkin GPS</Text>
           <View style={styles.checkboxContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.checkbox, enableGPS && styles.checkboxChecked]}
               onPress={() => setEnableGPS(!enableGPS)}
             >
-              {enableGPS && <Ionicons name="checkmark" size={16} color="white" />}
+              {enableGPS && (
+                <Ionicons name="checkmark" size={16} color="white" />
+              )}
             </TouchableOpacity>
             <Text style={styles.checkboxLabel}>Yes</Text>
           </View>
@@ -725,8 +814,11 @@ export default function Create() {
           <TouchableOpacity style={styles.imageUpload} onPress={pickImage}>
             {selectedImage ? (
               <View style={styles.imageContainer}>
-                <Image source={{ uri: selectedImage }} style={{ width: 100, height: 100, borderRadius: 8 }} />
-                <TouchableOpacity 
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={{ width: 100, height: 100, borderRadius: 8 }}
+                />
+                <TouchableOpacity
                   style={styles.removeImageButton}
                   onPress={removeImage}
                 >
@@ -743,22 +835,22 @@ export default function Create() {
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => router.back()}
             disabled={isSubmitting}
           >
             <Text style={styles.cancelButtonText}>Hủy</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
-              styles.saveButton, 
-              (isLoading || isSubmitting) && { opacity: 0.7 }
+              styles.saveButton,
+              (isLoading || isSubmitting) && { opacity: 0.7 },
             ]}
             onPress={handleSaveEvent}
             disabled={isLoading || isSubmitting}
           >
-            {(isLoading || isSubmitting) ? (
+            {isLoading || isSubmitting ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.saveButtonText}>Lưu</Text>
@@ -783,23 +875,26 @@ export default function Create() {
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.tagListContainer}>
               <FlatList
                 data={TAGS}
                 renderItem={renderTagItem}
-                keyExtractor={item => item}
+                keyExtractor={(item) => item}
                 style={styles.tagList}
               />
             </View>
 
             <View style={styles.tagModalFooter}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.confirmButton}
                 onPress={handleConfirmTags}
               >
                 <Text style={styles.confirmButtonText}>
-                  Xác nhận {tempSelectedTags.length > 0 ? `(${tempSelectedTags[0]})` : ''}
+                  Xác nhận{" "}
+                  {tempSelectedTags.length > 0
+                    ? `(${tempSelectedTags[0]})`
+                    : ""}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -809,4 +904,3 @@ export default function Create() {
     </ScrollView>
   );
 }
-
