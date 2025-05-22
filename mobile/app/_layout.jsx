@@ -7,9 +7,16 @@ import { useAuthStore } from "../store/authStore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initSentry } from "../config/sentry.js";
 import * as Sentry from '@sentry/react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import SplashModule from '../config/SplashModule.js';
 
-// Initialize Sentry as early as possible
+// Khởi tạo Sentry sớm nhất có thể
 initSentry();
+
+// Đảm bảo splash screen không tự động ẩn
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* ignore error */
+});
 
 const RootLayoutBase = () => {
   const router = useRouter();
@@ -21,16 +28,19 @@ const RootLayoutBase = () => {
     const initialize = async () => {
       try {
         await checkAuth();
-        const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
-        
-        if (!hasSeenOnboarding) {
-          router.replace("/(onboarding)");
-        }
-        setIsReady(true);
       } catch (error) {
         Sentry.captureException(error);
         console.error('Error during initialization:', error);
+      } finally {
         setIsReady(true);
+        // Đợi một chút trước khi ẩn splash screen
+        setTimeout(async () => {
+          try {
+            await SplashScreen.hideAsync();
+          } catch (e) {
+            console.warn('Error hiding splash screen:', e);
+          }
+        }, 500);
       }
     };
 
@@ -60,7 +70,6 @@ const RootLayoutBase = () => {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(onboarding)" />
         </Stack>
       </SafeScreen>
       <StatusBar style="dark" />

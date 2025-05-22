@@ -6,7 +6,7 @@ import { useEventStore } from './eventStore'
 //import { IP_ADDRESS } from '@env'
 const FIREBASE_APIKEY = process.env.EXPO_PUBLIC_FIREBASE_APIKEY
 const ip = process.env.EXPO_PUBLIC_IP_ADDRESS
-const API_BASE_URL = `http://${ip}:80/v1`
+const API_BASE_URL = `http://${ip}:8080/v1`
 
 // Debug log để kiểm tra FIREBASE_API_KEY có được load đúng không
 console.log('Firebase API Key:', FIREBASE_APIKEY);
