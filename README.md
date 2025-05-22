@@ -33,27 +33,27 @@ cd MiniEvent_v2
 ### 2. Cài đặt dependencies
 
 # Cài đặt dependencies cho backend
-cd backend
+cd backend  
 npm install
 
 # Cài đặt dependencies cho frontend
-cd ../mobile
+cd ../mobile  
 npm install hoặc npm install --legacy-peer-deps nếu thấy có lỗi 
 
 
 ### 3. Cấu hình môi trường
 - Tạo file `.env` trong thư mục mobile với nội dung:
 
-FIREBASE_APIKEY
-IP_ADDRESS
-SENTRY_AUTH_TOKEN
+FIREBASE_APIKEY  
+IP_ADDRESS  
+SENTRY_AUTH_TOKEN  
 DNS_SENTRY
 
 ### 4. Chạy dự án
 
 # Chạy backend
 # Chạy frontend (trong terminal mới)
-cd ../mobile
+cd ../mobile  
 npx expo
 
 
