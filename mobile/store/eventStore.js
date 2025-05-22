@@ -1,7 +1,10 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
-import {IP_ADDRESS} from '@env'
+
+const IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
+const FIREBASE_API_KEY = process.env.EXPO_PUBLIC_FIREBASE_APIKEY
+
 
 const API_BASE_URL = `http://${IP_ADDRESS}:80/v1`
 

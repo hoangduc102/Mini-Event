@@ -21,7 +21,7 @@ npm install hoặc npm install --legacy-peer-deps nếu thấy có lỗi
 
 2. Cấu hình môi trường:
 - Tạo file `.env` trong thư mục `mobile` 
-- Điền các biến môi trường cần thiết (FIREBASE_APIKEY, IP_ADDRESS, SENTRY_AUTH_TOKEN, DNS_SENTRY )
+- Điền các biến môi trường cần thiết (EXPO_PUBLIC_FIREBASE_APIKEY, EXPO_PUBLIC_IP_ADDRESS, EXPO_PUBLIC_SENTRY_AUTH_TOKEN, EXPO_PUBLIC_DNS_SENTRY )
 
 ## Chạy ứng dụng
 

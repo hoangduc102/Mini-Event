@@ -1,18 +1,23 @@
 import * as Sentry from '@sentry/react-native';
-import { DNS_SENTRY } from '@env';
+
 
 export const initSentry = () => {
   Sentry.init({
-    dsn: DNS_SENTRY,
-    debug: __DEV__,
+    dsn: process.env.EXPO_PUBLIC_DNS_SENTRY,
+    debug: false,
     enableAutoSessionTracking: true,
     sessionTrackingIntervalMillis: 30000,
     beforeSend(event) {
-      return event;
+      if (event.level === 'error' || event.level === 'fatal') {
+        return event;
+      }
+      return null;
     },
     integrations: [
       Sentry.reactNavigationIntegration(),
     ],
-    tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+    tracesSampleRate: 0.2,
+    enableNativeCrashHandling: true,
+    enableAutoPerformanceTracking: false,
   });
 }; 

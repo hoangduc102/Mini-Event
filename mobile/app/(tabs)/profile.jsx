@@ -17,14 +17,6 @@ export default function Profile() {
   const { logout, user, deleteAccount } = useAuthStore();
   const router = useRouter();
 
-  const handleResetOnboarding = async () => {
-    try {
-      await AsyncStorage.removeItem('hasSeenOnboarding');
-      router.replace('/(onboarding)');
-    } catch (error) {
-      console.error('Error resetting onboarding:', error);
-    }
-  };
 
   const handleDeleteAccount = async () => {
     const result = await deleteAccount();
@@ -149,15 +141,6 @@ export default function Profile() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.debugSection}>
-          <Text style={styles.debugTitle}>Debug Tools</Text>
-          <TouchableOpacity 
-            style={styles.resetButton}
-            onPress={handleResetOnboarding}
-          >
-            <Text style={styles.resetButtonText}>Reset Onboarding</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
