@@ -46,7 +46,8 @@ npm install hoặc npm install --legacy-peer-deps nếu thấy có lỗi
 
 EXPO_PUBLIC_FIREBASE_APIKEY      
 EXPO_PUBLIC_IP_ADDRESS    
-EXPO_PUBLIC_SENTRY_AUTH_TOKEN                EXPO_PUBLIC_DNS_SENTRY             
+EXPO_PUBLIC_SENTRY_AUTH_TOKEN  
+EXPO_PUBLIC_DNS_SENTRY             
 
 ### 4. Chạy dự án
 
