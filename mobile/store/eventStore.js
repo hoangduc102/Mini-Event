@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
+mport { IP_ADDRESS } from '@env'
 
-const API_BASE_URL = 'http://192.168.43.252:80/v1'
+const API_BASE_URL = `http://${IP_ADDRESS}:80/v1`
 
 // Utility function để lấy token
 const getAuthToken = async () => {
