@@ -3,8 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { FIREBASE_APIKEY } from '@env'
 import axios from 'axios'
 import { useEventStore } from './eventStore'
+import { IP_ADDRESS } from '@env'
 
-const API_BASE_URL = 'http://192.168.43.252:80/v1'
+const API_BASE_URL = `http://${IP_ADDRESS}:80/v1`
 
 // Debug log để kiểm tra FIREBASE_API_KEY có được load đúng không
 console.log('Firebase API Key:', FIREBASE_APIKEY);

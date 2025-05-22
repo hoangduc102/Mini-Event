@@ -1,50 +1,76 @@
-# Welcome to your Expo app 👋
+# MiniEvent Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ứng dụng di động cho dự án MiniEvent được xây dựng bằng React Native và Expo.
 
-## Get started
+## Yêu cầu hệ thống
 
-1. Install dependencies
+- Node.js (phiên bản 18 trở lên)
+- npm hoặc yarn
+- Expo CLI
+- Android Studio (cho Android development)
+- Xcode (cho iOS development, chỉ trên macOS)
 
-   ```bash
-   npm install
-   ```
+## Cài đặt
 
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+1. Cài đặt các dependencies:
 
 ```bash
-npm run reset-project
+cd mobile
+npm install hoặc npm install --legacy-peer-deps nếu thấy có lỗi 
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Cấu hình môi trường:
+- Tạo file `.env` trong thư mục `mobile` 
+- Điền các biến môi trường cần thiết (FIREBASE_APIKEY, IP_ADDRESS, SENTRY_AUTH_TOKEN, DNS_SENTRY )
 
-## Learn more
+## Chạy ứng dụng
 
-To learn more about developing your project with Expo, look at the following resources:
+1. Khởi động backend server trước 
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+2. Chạy ứng dụng mobile:
 
-## Join the community
+```bash
+npx expo 
+```
 
-Join our community of developers creating universal apps.
+Sau khi chạy lệnh trên, bạn có thể:
+- Quét mã QR bằng ứng dụng Expo Go trên điện thoại
+- Nhấn 'a' để mở trên Android emulator
+- Nhấn 'i' để mở trên iOS simulator (chỉ trên macOS)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Cấu trúc dự án
+
+```
+mobile/
+├── app/              # Chứa các màn hình và navigation (Expo Router)
+├── assets/          # Images, fonts và các tài nguyên khác
+├── components/      # Các component tái sử dụng
+├── config/         # Cấu hình ứng dụng
+├── constants/      # Các hằng số và theme
+├── store/          # State management (Redux/Context)
+├── app.json        # Cấu hình Expo
+├── eas.json        # Cấu hình EAS Build
+├── babel.config.js # Cấu hình Babel
+└── tsconfig.json   # Cấu hình TypeScript
+```
+
+## Tính năng chính
+
+- Đăng nhập/Đăng ký
+- Quản lý sự kiện
+- Thông báo realtime
+- Tích hợp Firebase
+- Và nhiều tính năng khác...
+
+## Liên kết hữu ích
+
+- [Expo Documentation](https://docs.expo.dev/)
+- [React Native Documentation](https://reactnative.dev/docs/getting-started)
+- [Firebase Documentation](https://firebase.google.com/docs)
+
+## Hỗ trợ
+
+Nếu bạn gặp vấn đề hoặc cần hỗ trợ, vui lòng:
+1. Kiểm tra [issues](https://github.com/hoangduc102/issues)
+2. Tạo issue mới nếu cần
+3. Liên hệ team development

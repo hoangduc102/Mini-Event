@@ -1,6 +1,6 @@
 # MiniEvent - Ứng dụng Quản lý Sự kiện
 
-![MiniEvent Logo](https://via.placeholder.com/150) <!-- Thay thế bằng logo thực tế của bạn -->
+![MiniEvent Logo](./mobile/assets/images/logo.svg) <!-- Thay thế bằng logo thực tế của bạn -->
 
 MiniEvent là một ứng dụng di động giúp quản lý và tham gia các sự kiện một cách dễ dàng và hiệu quả.
 
@@ -15,9 +15,6 @@ MiniEvent là một ứng dụng di động giúp quản lý và tham gia các s
 ## 🛠️ Công nghệ sử dụng
 
 - **Frontend**: React Native, Expo
-- **Backend**: Node.js, Express
-- **Database**: MongoDB
-- **Authentication**: JWT
 
 ## 📋 Yêu cầu hệ thống
 
@@ -41,32 +38,29 @@ npm install
 
 # Cài đặt dependencies cho frontend
 cd ../mobile
-npm install
+npm install hoặc npm install --legacy-peer-deps nếu thấy có lỗi 
 
 
 ### 3. Cấu hình môi trường
-- Tạo file `.env` trong thư mục backend với nội dung:
+- Tạo file `.env` trong thư mục mobile với nội dung:
 
-PORT=3000
-MONGODB_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-
+FIREBASE_APIKEY
+IP_ADDRESS
+SENTRY_AUTH_TOKEN
+DNS_SENTRY
 
 ### 4. Chạy dự án
 
 # Chạy backend
-cd backend
-npm start
-
 # Chạy frontend (trong terminal mới)
 cd ../mobile
-npm start
+npx expo
 
 
 ## 📱 Cài đặt ứng dụng
 
 1. Tải ứng dụng Expo Go trên điện thoại của bạn
-2. Quét mã QR code hiển thị sau khi chạy `npm start` trong thư mục mobile
+2. Quét mã QR code hiển thị sau khi chạy `npx expo` trong thư mục mobile
 3. Ứng dụng sẽ tự động cài đặt và chạy
 
 ## 🤝 Đóng góp
@@ -85,7 +79,7 @@ Dự án này được phân phối dưới giấy phép MIT - xem file [LICENSE
 
 ## 📞 Liên hệ
 
-- Email: [your-email@example.com]
+- Email: [hoangduc201020@gmail.com]
 - Website: [your-website.com]
 
 
