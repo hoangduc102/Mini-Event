@@ -1,9 +1,10 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
-import {IP_ADDRESS} from '@env'
+//import {IP_ADDRESS} from '@env'
 
-const API_BASE_URL = `http://${IP_ADDRESS}:80/v1`
+const ip = process.env.EXPO_PUBLIC_IP_ADDRESS
+const API_BASE_URL = `http://${ip}:80/v1`
 
 // Utility function để lấy token
 const getAuthToken = async () => {
@@ -91,7 +92,7 @@ const handleApiResponse = (response) => {
   if (!response.data) {
     throw new Error('No data received from server');
   }
-  
+
   if (response.data.status !== 200) {
     throw new Error(response.data.message || 'Server error');
   }
@@ -165,8 +166,8 @@ export const useEventStore = create((set, get) => ({
         }
       });
 
-      if (response.status === 404 || 
-          (response.data && response.data.data && response.data.data.length === 0)) {
+      if (response.status === 404 ||
+        (response.data && response.data.data && response.data.data.length === 0)) {
         console.log('No events found');
         set({
           myEvents: [],
@@ -193,7 +194,7 @@ export const useEventStore = create((set, get) => ({
     } catch (error) {
       console.error('Error in getMyEvents:', error);
       const errorMessage = getErrorMessage(error);
-      set({ 
+      set({
         isLoading: false,
         error: errorMessage
       });
@@ -211,8 +212,8 @@ export const useEventStore = create((set, get) => ({
         throw new Error('Không thể tải dữ liệu sau nhiều lần thử');
       }
 
-      set({ 
-        isLoadingAttended: true, 
+      set({
+        isLoadingAttended: true,
         attendedError: null,
         retryCount: isRetry ? get().retryCount + 1 : 0
       });
@@ -243,9 +244,9 @@ export const useEventStore = create((set, get) => ({
       });
 
       // Xử lý các trường hợp response
-      if (response.status === 404 || 
-          (response.data && response.data.data && response.data.data.length === 0) ||
-          (response.status === 500 && response.data?.message?.includes('Failed to find events'))) {
+      if (response.status === 404 ||
+        (response.data && response.data.data && response.data.data.length === 0) ||
+        (response.status === 500 && response.data?.message?.includes('Failed to find events'))) {
         console.log('No attended events found');
         set({
           attendedEvents: [],
@@ -275,15 +276,15 @@ export const useEventStore = create((set, get) => ({
       console.error('Error in getAttendedEvents:', error);
       const errorMessage = getErrorMessage(error);
 
-      set({ 
+      set({
         isLoadingAttended: false,
         attendedError: errorMessage
       });
 
       if (
-        (error.message.includes('network') || 
-         error.message.includes('timeout') ||
-         error.response?.status === 500) && 
+        (error.message.includes('network') ||
+          error.message.includes('timeout') ||
+          error.response?.status === 500) &&
         !isRetry
       ) {
         console.log('Retrying getAttendedEvents...');

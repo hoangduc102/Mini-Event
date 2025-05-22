@@ -1,9 +1,9 @@
 import * as Sentry from '@sentry/react-native';
-import { DNS_SENTRY } from '@env';
+//import { DNS_SENTRY } from '@env';
 
 export const initSentry = () => {
   Sentry.init({
-    dsn: DNS_SENTRY,
+    dsn: process.env.EXPO_PUBLIC_DNS_SENTRY,
     debug: __DEV__,
     enableAutoSessionTracking: true,
     sessionTrackingIntervalMillis: 30000,
