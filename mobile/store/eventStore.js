@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
-mport { IP_ADDRESS } from '@env'
+import { IP_ADDRESS } from '@env'
 
 const API_BASE_URL = `http://${IP_ADDRESS}:80/v1`
 
