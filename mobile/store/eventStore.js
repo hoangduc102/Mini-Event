@@ -1,10 +1,13 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
-//import {IP_ADDRESS} from '@env'
 
-const ip = process.env.EXPO_PUBLIC_IP_ADDRESS
-const API_BASE_URL = `http://${ip}:80/v1`
+const IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
+const FIREBASE_API_KEY = process.env.EXPO_PUBLIC_FIREBASE_APIKEY
+
+
+const API_BASE_URL = `${IP_ADDRESS}/v1`
+
 
 // Utility function để lấy token
 const getAuthToken = async () => {
@@ -347,6 +350,72 @@ export const useEventStore = create((set, get) => ({
     } catch (error) {
       console.error('Error creating event:', error);
       const errorMessage = getErrorMessage(error);
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  },
+
+  // Lấy thông tin chi tiết của một sự kiện
+  getEventDetail: async (eventId) => {
+    try {
+      set({ isLoading: true, error: null });
+      console.log('Fetching event detail for ID:', eventId);
+
+      const response = await retryOperation(async () => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        try {
+          console.log('Making request to /events');
+          const response = await api.get('/events', {
+            params: {
+              pageSize: 100 // Lấy nhiều sự kiện hơn để tăng khả năng tìm thấy
+            },
+            signal: controller.signal,
+            validateStatus: function (status) {
+              return status === 200 || status === 404;
+            }
+          });
+          console.log('Response from /events:', response.data);
+
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          console.error('Error in getEventDetail request:', error);
+          throw error;
+        }
+      });
+
+      if (response.status === 404) {
+        throw new Error('Sự kiện không tồn tại');
+      }
+
+      if (!response.data || response.data.status !== 200) {
+        throw new Error(response.data?.message || 'Không thể lấy thông tin sự kiện');
+      }
+
+      // Tìm sự kiện có id trùng khớp
+      const eventDetail = response.data.data?.find(event => event.id === eventId);
+      if (!eventDetail) {
+        throw new Error('Không tìm thấy thông tin sự kiện');
+      }
+
+      set({ isLoading: false, error: null });
+
+      return { 
+        success: true, 
+        data: eventDetail 
+      };
+    } catch (error) {
+      console.error('Error in getEventDetail:', error);
+      const errorMessage = getErrorMessage(error);
+      set({ 
+        isLoading: false,
+        error: errorMessage
+      });
       return {
         success: false,
         error: errorMessage

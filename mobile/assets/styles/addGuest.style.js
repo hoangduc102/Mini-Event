@@ -1,0 +1,124 @@
+// styles/guestList.style.js
+import { StyleSheet } from 'react-native';
+
+export default StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingTop: 40,
+  },
+  backButton: {
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  topButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  topBox: {
+    width: '48%',
+    height: 80,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topBoxText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+    marginBottom: 20,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 14,
+  },
+  subHeading: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  smallText: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 16,
+  },
+  guestItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 0.5,
+    borderColor: '#ddd',
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#bbb',
+    marginRight: 12,
+  },
+  guestInfo: {
+    flex: 1,
+  },
+  guestName: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  statusText: (color) => ({
+    fontSize: 13,
+    color: color,
+  }),
+  contribution: {
+    fontSize: 13,
+    color: '#333',
+  },
+  outlineButton: {
+    borderWidth: 1,
+    borderColor: '#000',
+    borderRadius: 10,
+    paddingVertical: 14,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  outlineButtonText: {
+    fontWeight: '500',
+  },
+  primaryButton: {
+    backgroundColor: '#000',
+    borderRadius: 10,
+    paddingVertical: 14,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontWeight: '500',
+  },
+});

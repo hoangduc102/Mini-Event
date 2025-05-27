@@ -3,15 +3,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 //import { FIREBASE_APIKEY } from '@env'
 import axios from 'axios'
 import { useEventStore } from './eventStore'
-//import { IP_ADDRESS } from '@env'
-const FIREBASE_APIKEY = process.env.EXPO_PUBLIC_FIREBASE_APIKEY
-const ip = process.env.EXPO_PUBLIC_IP_ADDRESS
-const API_BASE_URL = `http://${ip}:8080/v1`
+
+
+const IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
+const FIREBASE_API_KEY = process.env.EXPO_PUBLIC_FIREBASE_APIKEY
+
+
+const API_BASE_URL = `${IP_ADDRESS}/v1`
 
 // Debug log để kiểm tra FIREBASE_API_KEY có được load đúng không
-console.log('Firebase API Key:', FIREBASE_APIKEY);
-console.log('Firebase API Key loaded:', FIREBASE_APIKEY ? 'Yes' : 'No');
-if (!FIREBASE_APIKEY) {
+console.log('Firebase API Key:', FIREBASE_API_KEY);
+console.log('Firebase API Key loaded:', FIREBASE_API_KEY ? 'Yes' : 'No');
+if (!FIREBASE_API_KEY) {
   console.warn('FIREBASE_API_KEY is not loaded from .env file')
 }
 
@@ -325,7 +328,7 @@ export const useAuthStore = create((set, get) => ({
         }
 
         // Gọi Firebase để refresh token
-        const response = await axios.post(`https://securetoken.googleapis.com/v1/token?key=${FIREBASE_APIKEY}`,
+        const response = await axios.post(`https://securetoken.googleapis.com/v1/token?key=${FIREBASE_API_KEY}`,
           `grant_type=refresh_token&refresh_token=${refreshToken}`,
           {
             headers: {

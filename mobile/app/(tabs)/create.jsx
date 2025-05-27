@@ -599,8 +599,9 @@ export default function Create() {
               onChangeText={(text) => {
                 setSearchQuery(text);
                 setLocationError(null);
-                handleLocationSearch(text);
+                // handleLocationSearch(text);
               }}
+              onEndEditing={() => handleLocationSearch(searchQuery)}
               editable={!isGeocoding}
             />
             {isGeocoding && (
