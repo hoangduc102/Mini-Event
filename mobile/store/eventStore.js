@@ -6,7 +6,8 @@ const IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
 const FIREBASE_API_KEY = process.env.EXPO_PUBLIC_FIREBASE_APIKEY
 
 
-const API_BASE_URL = `http://${IP_ADDRESS}:80/v1`
+const API_BASE_URL = `${IP_ADDRESS}/v1`
+
 
 // Utility function để lấy token
 const getAuthToken = async () => {
@@ -94,7 +95,7 @@ const handleApiResponse = (response) => {
   if (!response.data) {
     throw new Error('No data received from server');
   }
-  
+
   if (response.data.status !== 200) {
     throw new Error(response.data.message || 'Server error');
   }
@@ -168,8 +169,8 @@ export const useEventStore = create((set, get) => ({
         }
       });
 
-      if (response.status === 404 || 
-          (response.data && response.data.data && response.data.data.length === 0)) {
+      if (response.status === 404 ||
+        (response.data && response.data.data && response.data.data.length === 0)) {
         console.log('No events found');
         set({
           myEvents: [],
@@ -196,7 +197,7 @@ export const useEventStore = create((set, get) => ({
     } catch (error) {
       console.error('Error in getMyEvents:', error);
       const errorMessage = getErrorMessage(error);
-      set({ 
+      set({
         isLoading: false,
         error: errorMessage
       });
@@ -214,8 +215,8 @@ export const useEventStore = create((set, get) => ({
         throw new Error('Không thể tải dữ liệu sau nhiều lần thử');
       }
 
-      set({ 
-        isLoadingAttended: true, 
+      set({
+        isLoadingAttended: true,
         attendedError: null,
         retryCount: isRetry ? get().retryCount + 1 : 0
       });
@@ -246,9 +247,9 @@ export const useEventStore = create((set, get) => ({
       });
 
       // Xử lý các trường hợp response
-      if (response.status === 404 || 
-          (response.data && response.data.data && response.data.data.length === 0) ||
-          (response.status === 500 && response.data?.message?.includes('Failed to find events'))) {
+      if (response.status === 404 ||
+        (response.data && response.data.data && response.data.data.length === 0) ||
+        (response.status === 500 && response.data?.message?.includes('Failed to find events'))) {
         console.log('No attended events found');
         set({
           attendedEvents: [],
@@ -278,15 +279,15 @@ export const useEventStore = create((set, get) => ({
       console.error('Error in getAttendedEvents:', error);
       const errorMessage = getErrorMessage(error);
 
-      set({ 
+      set({
         isLoadingAttended: false,
         attendedError: errorMessage
       });
 
       if (
-        (error.message.includes('network') || 
-         error.message.includes('timeout') ||
-         error.response?.status === 500) && 
+        (error.message.includes('network') ||
+          error.message.includes('timeout') ||
+          error.response?.status === 500) &&
         !isRetry
       ) {
         console.log('Retrying getAttendedEvents...');
@@ -349,6 +350,72 @@ export const useEventStore = create((set, get) => ({
     } catch (error) {
       console.error('Error creating event:', error);
       const errorMessage = getErrorMessage(error);
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  },
+
+  // Lấy thông tin chi tiết của một sự kiện
+  getEventDetail: async (eventId) => {
+    try {
+      set({ isLoading: true, error: null });
+      console.log('Fetching event detail for ID:', eventId);
+
+      const response = await retryOperation(async () => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+        try {
+          console.log('Making request to /events');
+          const response = await api.get('/events', {
+            params: {
+              pageSize: 100 // Lấy nhiều sự kiện hơn để tăng khả năng tìm thấy
+            },
+            signal: controller.signal,
+            validateStatus: function (status) {
+              return status === 200 || status === 404;
+            }
+          });
+          console.log('Response from /events:', response.data);
+
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          console.error('Error in getEventDetail request:', error);
+          throw error;
+        }
+      });
+
+      if (response.status === 404) {
+        throw new Error('Sự kiện không tồn tại');
+      }
+
+      if (!response.data || response.data.status !== 200) {
+        throw new Error(response.data?.message || 'Không thể lấy thông tin sự kiện');
+      }
+
+      // Tìm sự kiện có id trùng khớp
+      const eventDetail = response.data.data?.find(event => event.id === eventId);
+      if (!eventDetail) {
+        throw new Error('Không tìm thấy thông tin sự kiện');
+      }
+
+      set({ isLoading: false, error: null });
+
+      return { 
+        success: true, 
+        data: eventDetail 
+      };
+    } catch (error) {
+      console.error('Error in getEventDetail:', error);
+      const errorMessage = getErrorMessage(error);
+      set({ 
+        isLoading: false,
+        error: errorMessage
+      });
       return {
         success: false,
         error: errorMessage

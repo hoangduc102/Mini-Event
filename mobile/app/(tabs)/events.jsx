@@ -48,13 +48,13 @@ const StatusBadge = React.memo(({ status }) => (
   </View>
 ));
 
-const EventCard = React.memo(({ title, date, location, status, onPress }) => {
+const EventCard = React.memo(({ title, date, location, status, onPress, image }) => {
   const formattedDate = useMemo(() => formatDateString(date), [date]);
   
   return (
     <View style={styles.eventCard}>
       <Image 
-        source={require('../../assets/images/App-logo.png')}
+        source={image ? { uri: image } : require('../../assets/images/App-logo.png')}
         style={styles.eventImage}
       />
       <View style={styles.eventInfo}>
@@ -159,6 +159,7 @@ const EventSection = React.memo(({ title, events, type }) => {
           location={event.address}
           status={type === 'myEvents' ? (new Date(event.date) > new Date() ? 'upcoming' : 'completed') : undefined}
           onPress={() => handleEventPress(event.id)}
+          image={event.image}
         />
       ))}
     </View>

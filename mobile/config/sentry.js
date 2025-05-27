@@ -20,4 +20,4 @@ export const initSentry = () => {
     enableNativeCrashHandling: true,
     enableAutoPerformanceTracking: false,
   });
-}; 
+};

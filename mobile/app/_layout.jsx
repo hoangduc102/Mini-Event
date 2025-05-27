@@ -8,8 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initSentry } from "../config/sentry.js";
 import * as Sentry from '@sentry/react-native';
 import * as SplashScreen from 'expo-splash-screen';
-import {splashModule} from "../config/splashModule.js"
-
+import SplashModule from '../config/SplashModule.js';
 
 // Khởi tạo Sentry sớm nhất có thể
 initSentry();
@@ -80,3 +79,4 @@ const RootLayoutBase = () => {
 
 // Wrap the root component with Sentry error boundary
 export default Sentry.wrap(RootLayoutBase);
+

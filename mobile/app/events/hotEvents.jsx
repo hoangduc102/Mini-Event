@@ -16,7 +16,7 @@ import EventCard from '../../components/EventCard';
 import SearchInput from '../../components/SearchInput';
 import { useAuthStore } from '../../store/authStore';
 
-export default function Search() {
+export default function HotEvents() {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
@@ -55,7 +55,7 @@ export default function Search() {
         clearError();
       } else {
         Alert.alert(
-          'Lỗi',
+          'Error',
           error,
           [{ text: 'OK', onPress: clearError }]
         );
@@ -81,25 +81,18 @@ export default function Search() {
     }
   };
 
-  const handleEventPress = useCallback((eventId) => {
-    router.push({
-      pathname: `/events/${eventId}`,
-      params: { id: eventId }
-    });
-  }, [router]);
-
   const onRefresh = useCallback(async () => {
     if (!token || !user) {
       Alert.alert(
-        'Thông báo',
-        'Vui lòng đăng nhập để xem danh sách sự kiện',
+        'Notification',
+        'Please log in to view the event list',
         [
           { 
-            text: 'Đăng nhập', 
+            text: 'Log in', 
             onPress: () => router.push('/login') 
           },
           { 
-            text: 'Hủy', 
+            text: 'Cancel', 
             style: 'cancel' 
           }
         ]
@@ -160,14 +153,13 @@ export default function Search() {
       return (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
-            Vui lòng đăng nhập để xem danh sách sự kiện
+            Please log in to view the event list
           </Text>
           <TouchableOpacity 
             style={styles.loginButton}
             onPress={() => router.push('/login')}
-            
           >
-            <Text style={styles.loginButtonText}>Đăng nhập</Text>
+            <Text style={styles.loginButtonText}>Log in</Text>
           </TouchableOpacity>
         </View>
       );
@@ -184,7 +176,7 @@ export default function Search() {
     if (events.length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Chưa có sự kiện công khai nào</Text>
+          <Text style={styles.emptyText}>No public events available</Text>
         </View>
       );
     }
@@ -193,7 +185,7 @@ export default function Search() {
       return (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
-            Không tìm thấy sự kiện công khai nào phù hợp với từ khóa "{searchQuery}"
+            No public events found matching the keyword "{searchQuery}"
           </Text>
         </View>
       );
@@ -203,14 +195,13 @@ export default function Search() {
       <>
         {searchQuery && filteredEvents.length > 0 && (
           <Text style={styles.resultText}>
-            {filteredEvents.length} sự kiện công khai được tìm thấy
+            {filteredEvents.length} public events found
           </Text>
         )}
         {(searchQuery ? filteredEvents : events).map((event) => (
           <EventCard 
             key={event.id} 
             event={event}
-            // onPress={() => handleEventPress(event.id)}
           />
         ))}
         {renderFooter()}
@@ -228,7 +219,7 @@ export default function Search() {
         >
           <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Events</Text>
+        <Text style={styles.headerTitle}>Hot Events</Text>
         <TouchableOpacity style={styles.headerButton}>
           <Ionicons name="filter" size={22} color="#1a1a1a" />
         </TouchableOpacity>
@@ -237,7 +228,7 @@ export default function Search() {
       <SearchInput 
         value={searchQuery}
         onChangeText={setSearchQuery}
-        placeholder="Tìm kiếm sự kiện..."
+        placeholder="Search events..."
       />
       
       <ScrollView 
@@ -267,7 +258,7 @@ export default function Search() {
       >
         {searchQuery && events.length > 0 ? (
           <Text style={styles.resultText}>
-            {filteredEvents.length} kết quả được tìm thấy
+            {filteredEvents.length} results found
           </Text>
         ) : null}
         
