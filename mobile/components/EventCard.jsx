@@ -3,13 +3,15 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ActivityIndicat
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../store/authStore';
+import { useEventStore } from '../store/eventStore';
 
 const DEFAULT_IMAGE = 'https://via.placeholder.com/400x200/EEEEEE/999999?text=No+Image';
 
 const EventCard = ({ event }) => {
   const [isJoining, setIsJoining] = useState(false);
   const router = useRouter();
-  const { joinEvent, token } = useAuthStore();
+  const { token } = useAuthStore();
+  const { registerEvent } = useEventStore();
 
   // Format date string
   const formatDate = (dateString) => {
@@ -23,6 +25,13 @@ const EventCard = ({ event }) => {
     } catch (error) {
       return dateString;
     }
+  };
+
+  const navigateToEventDetail = () => {
+    router.push({
+      pathname: `/events/${event.id}`,
+      params: { id: event.id }
+    });
   };
 
   const handleJoinEvent = async () => {
@@ -46,15 +55,16 @@ const EventCard = ({ event }) => {
 
     try {
       setIsJoining(true);
-      const result = await joinEvent(event.id);
+      const result = await registerEvent(event.id);
       
       if (result.success) {
-        Alert.alert('Thành công', result.message);
+        Alert.alert('Thành công', 'Đăng ký tham gia sự kiện thành công!');
+        navigateToEventDetail();
       } else {
-        Alert.alert('Lỗi', result.error);
+        Alert.alert('Lỗi', result.error || 'Không thể đăng ký tham gia sự kiện');
       }
     } catch (error) {
-      Alert.alert('Lỗi', error.message);
+      Alert.alert('Lỗi', error.message || 'Đã xảy ra lỗi khi đăng ký');
     } finally {
       setIsJoining(false);
     }
@@ -63,9 +73,7 @@ const EventCard = ({ event }) => {
   return (
     <TouchableOpacity 
       style={styles.card}
-      onPress={() => {
-        // Có thể thêm navigation đến trang chi tiết sự kiện ở đây
-      }}
+      onPress={navigateToEventDetail}
     >
       <Image
         source={{ uri: event.image || DEFAULT_IMAGE }}
@@ -98,7 +106,7 @@ const EventCard = ({ event }) => {
         </View>
       </View>
       
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[
           styles.button,
           event.isJoined && styles.joinedButton,
@@ -114,7 +122,7 @@ const EventCard = ({ event }) => {
             {event.isJoined ? 'Đã tham gia' : 'Tham gia'}
           </Text>
         )}
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </TouchableOpacity>
   );
 };
