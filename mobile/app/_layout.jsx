@@ -79,3 +79,4 @@ const RootLayoutBase = () => {
 
 // Wrap the root component with Sentry error boundary
 export default Sentry.wrap(RootLayoutBase);
+
