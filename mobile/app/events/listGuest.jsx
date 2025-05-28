@@ -1,18 +1,62 @@
-
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import styles from '../../assets/styles/listGuest.style';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useAuthStore } from '../../store/authStore';
 
 export default function GuestList() {
   const router = useRouter();
+  const { eventId } = useLocalSearchParams();
+  const { getGuestList } = useAuthStore();
+  const [guests, setGuests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const guests = [
-    { name: 'Aman Gupta', status: 'Pending', contribution: 'Bringing drinks', icon: 'help-circle-outline', color: 'orange' },
-    { name: 'Swagat Tiwari', status: 'Canceled', contribution: '', icon: 'close', color: 'red' },
-    { name: 'Dave Johnson', status: 'Confirmed', contribution: 'Bringing snacks', icon: 'checkmark', color: 'green' },
-  ];
+  useEffect(() => {
+    const fetchGuestList = async () => {
+      const result = await getGuestList(eventId);
+      if (result.success) {
+        // map API response to UI format
+        const mapped = result.data.map((item) => ({
+          id: item.appUserDTO.id,
+          status: item.stateType
+        }));
+        setGuests(mapped);
+      } else {
+        console.error('Lỗi lấy danh sách khách:', result.error);
+      }
+      setLoading(false);
+    };
+
+    if (eventId) {
+      fetchGuestList();
+    }
+  }, [eventId]);
+  const statusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'orange';
+      case 'confirmed':
+        return 'green';
+      case 'canceled':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  };
+
+  const statusIcon = (status) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'help-circle-outline';
+      case 'confirmed':
+        return 'checkmark';
+      case 'canceled':
+        return 'close';
+      default:
+        return 'alert-circle';
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -33,25 +77,34 @@ export default function GuestList() {
         <Ionicons name="call-outline" size={20} color="#999" />
       </View>
 
-      {/* Guest List */}
-      <Text style={styles.subHeading}>Guest List</Text>
-      <Text style={styles.smallText}>Availability and Contributions</Text>
-
-      {guests.map((guest, index) => (
-        <View key={index} style={styles.guestItem}>
-          <View style={styles.avatar} />
-          <View style={styles.guestInfo}>
-            <Text style={styles.guestName}>{guest.name}</Text>
-            <View style={styles.statusRow}>
-              <Text style={styles.statusText(guest.color)}>{guest.status}</Text>
-              <Ionicons name={guest.icon} size={14} color={guest.color} style={{ marginLeft: 4 }} />
-            </View>
-          </View>
-          {guest.contribution !== '' && (
-            <Text style={styles.contribution}>{guest.contribution}</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="orange" style={{ marginTop: 50 }} />
+      ) : (
+        <>
+          <Text style={styles.subHeading}>Guest List</Text>
+          {guests.length === 0 ? (
+            <Text style={{ textAlign: 'center', marginTop: 20 }}>Chưa có khách mời nào</Text>
+          ) : (
+            guests.map((guest, index) => (
+              <View key={index} style={styles.guestItem}>
+                <View style={styles.avatar} />
+                <View style={styles.guestInfo}>
+                  <Text style={styles.guestName}>{guest.id}</Text>
+                  <View style={styles.statusRow}>
+                    <Text style={styles.statusText(statusColor(guest.status))}>{guest.status}</Text>
+                    <Ionicons
+                      name={statusIcon(guest.status)}
+                      size={14}
+                      color={statusColor(guest.status)}
+                      style={{ marginLeft: 4 }}
+                    />
+                  </View>
+                </View>
+              </View>
+            ))
           )}
-        </View>
-      ))}
+        </>
+      )}
 
       {/* Action Buttons */}
       <TouchableOpacity style={styles.outlineButton}>

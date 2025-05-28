@@ -13,7 +13,7 @@ export default function ImagineEvent() {
   const [showScanner, setShowScanner] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const { event: eventBase64 } = useLocalSearchParams();
-  const {checkinQrCode} = useAuthStore();
+  const {checkinQrCode, getGuestList} = useAuthStore();
   const [isHandlingScan, setIsHandlingScan] = useState(false);
   let event = null;
   try {
@@ -140,7 +140,15 @@ export default function ImagineEvent() {
           </View>
           <View style={[styles.row, { marginTop: 8 }]}> 
             <Text style={styles.smallText}>{event.limit}</Text>
-            <TouchableOpacity style={styles.viewAllButton} onPress={() => router.push('/events/listGuest')}>
+            <TouchableOpacity
+              style={styles.viewAllButton}
+              onPress={() =>
+                router.push({
+                  pathname: '/events/listGuest',
+                  params: { eventId: event.id }
+                })
+              }
+            >
               <Text style={styles.viewAllText}>VIEW ALL / INVITE</Text>
             </TouchableOpacity>
           </View>

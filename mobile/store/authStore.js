@@ -694,29 +694,69 @@ export const useAuthStore = create((set, get) => ({
   },
 
   checkinQrCode: async (eventId, scannedToken) => {
-   try {
-    const token = get().token;
-    if (!token) {
+    try {
+      const token = get().token;
+      if (!token) {
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để thực hiện check-in'
+        };
+      }
+      const response = await axios.post(
+        `${API_BASE_URL}/events/checkin/qr`,
+        scannedToken, // body là chuỗi token quét được
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'text/plain',
+          },
+          params: { eventId },
+        }
+      );
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Check-in failed:', error.response?.data || error.message);
+      return { success: false, error: error.response?.data?.message || 'Lỗi check-in' };
+    }
+  },
+
+  getGuestList: async (eventId) => {
+    try {
+      const token = get().token;
+      if (!token) {
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để xem danh sách khách mời'
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/events/${eventId}/userList`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Lỗi khi tải danh sách khách mời: ${response.message}`);
+      }
+
+      const responseData = await response.json();
+      console.log('Guest List Response:', responseData);
+      if (responseData.status !== 200) {
+        throw new Error(responseData.message || "Có lỗi xảy ra");
+      }
+
+      return {
+        success: true,
+        data: responseData.data || []
+      };
+    } catch (error) {
+      console.error('Error in getGuestList:', error);
       return {
         success: false,
-        error: 'Vui lòng đăng nhập để thực hiện check-in'
+        error: error.message
       };
     }
-    const response = await axios.post(
-      `${API_BASE_URL}/events/checkin/qr`,
-      scannedToken, // body là chuỗi token quét được
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'text/plain',
-        },
-        params: { eventId },
-      }
-    );
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Check-in failed:', error.response?.data || error.message);
-    return { success: false, error: error.response?.data?.message || 'Lỗi check-in' };
-  }
   }
 }));
