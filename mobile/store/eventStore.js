@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
+import { encode as base64Encode } from 'base-64';
 
 const IP_ADDRESS = process.env.EXPO_PUBLIC_IP_ADDRESS
 const FIREBASE_API_KEY = process.env.EXPO_PUBLIC_FIREBASE_APIKEY
@@ -304,27 +305,37 @@ export const useEventStore = create((set, get) => ({
 
   // Đăng ký tham gia event
   registerEvent: async (eventId) => {
-    try {
-      const response = await api.get(`/events/register/${eventId}`, {
-        responseType: 'blob'
-      });
+  try {
+    const token = await getAuthToken();
+    if (!token) throw new Error('Authentication required');
 
-      // Sau khi đăng ký thành công, refresh danh sách attended events
-      await get().getAttendedEvents();
-
-      return {
-        success: true,
-        data: URL.createObjectURL(response.data)
-      };
-    } catch (error) {
-      console.error('Error registering for event:', error);
-      const errorMessage = getErrorMessage(error);
-      return {
-        success: false,
-        error: errorMessage
-      };
-    }
-  },
+    const response = await fetch(`${API_BASE_URL}/events/register/${eventId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'image/png'
+      }
+    });
+    // console.log('Response status:', response);
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = base64Encode(
+      String.fromCharCode(...new Uint8Array(arrayBuffer))
+    );
+    const imageDataUrl = `data:image/png;base64,${base64}`;
+    // console.log('Image data URL:', imageDataUrl);
+    return {
+      success: true,
+      data: imageDataUrl,
+    };
+  } catch (error) {
+    console.error("Error registering for event:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+},
 
   // Tạo event mới
   createEvent: async (eventData, formData) => {

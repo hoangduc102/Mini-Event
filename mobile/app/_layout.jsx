@@ -4,12 +4,10 @@ import SafeScreen from "../components/SafeScreen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initSentry } from "../config/sentry.js";
 import * as Sentry from '@sentry/react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import SplashModule from '../config/splashModule.js';
-
+import SplashModule from '../config/SplashModule.js';
+import Toast from 'react-native-toast-message';
 // Khởi tạo Sentry sớm nhất có thể
 initSentry();
 
@@ -72,6 +70,7 @@ const RootLayoutBase = () => {
           <Stack.Screen name="(auth)" />
         </Stack>
       </SafeScreen>
+      <Toast />
       <StatusBar style="dark" />
     </SafeAreaProvider>
   );

@@ -691,5 +691,32 @@ export const useAuthStore = create((set, get) => ({
         error: error.message
       };
     }
+  },
+
+  checkinQrCode: async (eventId, scannedToken) => {
+   try {
+    const token = get().token;
+    if (!token) {
+      return {
+        success: false,
+        error: 'Vui lòng đăng nhập để thực hiện check-in'
+      };
+    }
+    const response = await axios.post(
+      `${API_BASE_URL}/events/checkin/qr`,
+      scannedToken, // body là chuỗi token quét được
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'text/plain',
+        },
+        params: { eventId },
+      }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('Check-in failed:', error.response?.data || error.message);
+    return { success: false, error: error.response?.data?.message || 'Lỗi check-in' };
+  }
   }
 }));

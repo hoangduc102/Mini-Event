@@ -66,7 +66,7 @@ export default function EventDetail() {
   const { getEventDetail, isLoading, error } = useEventStore();
   const [showTicket, setShowTicket] = useState(false);
   const user = { name: 'Indriyani Puspita', phone: '0987654321' };
-
+  const [qrImage, setQrImage] = useState(null);
   useEffect(() => {
     const loadEventDetail = async () => {
       if (!id) return;
@@ -95,18 +95,22 @@ export default function EventDetail() {
   };
 
   const handleGetTicket = async () => {
-    try {
-      const result = await useEventStore.getState().registerEvent(id);
-      if (result.success) {
-        setShowTicket(true);
-      } else {
-        setShowTicket(true);
-        console.error('Đăng ký thất bại:', result.error);
-      }
-    } catch (error) {
-      console.error('Lỗi khi đăng ký:', error);
+  try {
+    const result = await useEventStore.getState().registerEvent(id);
+    if (result.success) {
+      setQrImage(result.data); // Đây là imageDataUrl base64
+      setShowTicket(true);
+    } else {
+      console.error('Đăng ký thất bại:', result.error);
+      setQrImage(null);
+      setShowTicket(true);
     }
-  };
+  } catch (error) {
+    console.error('Lỗi khi đăng ký:', error);
+    setQrImage(null);
+    setShowTicket(true);
+  }
+};
 
   if (isLoading) {
     return (
@@ -239,6 +243,7 @@ export default function EventDetail() {
         onClose={() => setShowTicket(false)}
         eventDetail={eventDetail}
         user={user}
+        qrImage={qrImage}
       />
     </SafeAreaView>
   );

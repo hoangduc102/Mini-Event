@@ -5,7 +5,7 @@ import { styles } from '../../assets/styles/event.styles'
 import { useRouter } from 'expo-router'
 import { useEventStore } from '../../store/eventStore'
 import { useAuthStore } from '../../store/authStore'
-
+import { Buffer } from 'buffer'; // nếu bạn chưa có
 const COLORS = {
   primary: '#4F46E5',
   secondary: '#64748B',
@@ -78,11 +78,15 @@ const EventSection = React.memo(({ title, events, type }) => {
   const [activeTab, setActiveTab] = useState('upcoming');
   const router = useRouter();
 
-  const handleEventPress = useCallback((eventId, index) => {
+  const handleEventPress = useCallback((event, index) => {
     if (title === 'My Events') {
-      router.push('/events/imagineEvent');
+      const encoded = Buffer.from(JSON.stringify(event)).toString('base64');
+      router.push({
+        pathname: '/events/imagineEvent',
+        params: { event: encoded },
+      });
     } else {
-      router.push(`/events/${eventId}`);
+      router.push(`/events/${event.id}`);
     }
   }, [router, title]);
 
@@ -162,7 +166,7 @@ const EventSection = React.memo(({ title, events, type }) => {
           date={event.date}
           location={event.address}
           status={type === 'myEvents' ? (new Date(event.date) > new Date() ? 'upcoming' : 'completed') : undefined}
-          onPress={() => handleEventPress(event.id, idx)}
+           onPress={() => handleEventPress(event, idx)}
           image={event.image}
         />
       ))}

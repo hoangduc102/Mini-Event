@@ -12,7 +12,7 @@ const EventCard = ({ event }) => {
   const router = useRouter();
   const { token } = useAuthStore();
   const { registerEvent } = useEventStore();
-
+  const [qrImage, setQrImage] = useState(null);
   // Format date string
   const formatDate = (dateString) => {
     try {
@@ -58,6 +58,8 @@ const EventCard = ({ event }) => {
       const result = await registerEvent(event.id);
       
       if (result.success) {
+        setQrImage(result.data);
+        console.log('QR Code Image:', result.data);
         Alert.alert('Thành công', 'Đăng ký tham gia sự kiện thành công!');
         navigateToEventDetail();
       } else {
@@ -76,10 +78,10 @@ const EventCard = ({ event }) => {
       onPress={navigateToEventDetail}
     >
       <Image
-        source={{ uri: event.image || DEFAULT_IMAGE }}
+        source={{ uri: qrImage || event.image || DEFAULT_IMAGE }}
         style={styles.image}
-        onError={(e) => {
-          e.target.src = DEFAULT_IMAGE;
+        onError={() => {
+          console.warn("Không tải được ảnh");
         }}
       />
       <View style={styles.contentContainer}>

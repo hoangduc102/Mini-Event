@@ -3,7 +3,7 @@ import { Modal, View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../../assets/styles/event.styles';
 
-export default function TicketModal({ visible, onClose, eventDetail, user }) {
+export default function TicketModal({ visible, onClose, eventDetail, user, qrImage  }) {
   if (!eventDetail || !user) return null;
 
   return (
@@ -16,7 +16,21 @@ export default function TicketModal({ visible, onClose, eventDetail, user }) {
           <TouchableOpacity style={styles.ticketFavoriteButton}>
             <Ionicons name="heart" size={24} color="#A52A2A" />
           </TouchableOpacity>
-          <View style={styles.ticketImagePlaceholder} />
+
+
+          {/* <View style={styles.ticketImagePlaceholder} /> */}
+          {/* Hiển thị mã QR thay vì placeholder */}
+          {qrImage ? (
+            <Image
+              source={{ uri: qrImage }}
+              style={{ width: 180, height: 180, alignSelf: 'center', marginVertical: 16 }}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={styles.ticketImagePlaceholder} />
+          )}
+
+
           <Text style={styles.ticketTitle}>{eventDetail.name}</Text>
           <Text style={styles.ticketSubtitle}>
             {eventDetail.date} ~ {eventDetail.address}
