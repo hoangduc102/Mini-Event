@@ -16,7 +16,8 @@
       },
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Ứng dụng cần truy cập vị trí của bạn để hiển thị bản đồ và chọn địa điểm.",
-        "NSLocationAlwaysUsageDescription": "Ứng dụng cần truy cập vị trí của bạn để hiển thị bản đồ và chọn địa điểm."
+        "NSLocationAlwaysUsageDescription": "Ứng dụng cần truy cập vị trí của bạn để hiển thị bản đồ và chọn địa điểm.",
+        "NSCameraUsageDescription": "Ứng dụng cần truy cập camera của bạn để quét mã QR"
       }
     },
     "android": {
@@ -34,7 +35,8 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "CAMERA"
       ]
     },
     "web": {
@@ -61,6 +63,13 @@
       ],
       [
         "sentry-expo"
+      ],
+      "expo-barcode-scanner",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Ứng dụng cần truy cập camera của bạn để quét mã QR"
+        }
       ]
     ],
     "experiments": {

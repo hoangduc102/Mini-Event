@@ -1,12 +1,59 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import styles from '../../assets/styles/eventDetail.style';
 import { useRouter } from 'expo-router';
 
 export default function ImagineEvent() {
   const router = useRouter();
   const [showFullDesc, setShowFullDesc] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
+
+  const handleBarCodeScanned = ({ data }) => {
+    setShowScanner(false);
+    // Xử lý dữ liệu QR code ở đây
+    alert(`Mã QR đã được quét thành công: ${data}`);
+  };
+
+  const startScanning = async () => {
+    if (!permission?.granted) {
+      const result = await requestPermission();
+      if (!result.granted) {
+        alert('Cần quyền truy cập camera để quét mã QR');
+        return;
+      }
+    }
+    setShowScanner(true);
+  };
+
+  if (showScanner) {
+    return (
+      <View style={{ flex: 1 }}>
+        <CameraView
+          style={{ flex: 1 }}
+          facing="back"
+          barcodeScannerSettings={{
+            barcodeTypes: ["qr"],
+          }}
+          onBarcodeScanned={handleBarCodeScanned}
+        >
+          <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+            <TouchableOpacity 
+              style={{ position: 'absolute', top: 40, left: 20, backgroundColor: 'white', padding: 10, borderRadius: 5 }}
+              onPress={() => setShowScanner(false)}
+            >
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <View style={{ width: 250, height: 250, borderWidth: 2, borderColor: 'white', borderRadius: 10 }} />
+            </View>
+          </View>
+        </CameraView>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -74,7 +121,7 @@ export default function ImagineEvent() {
       </ScrollView>
       {/* Button cố định dưới cùng */}
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#fff', paddingBottom: 18, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#ECECEC' }}>
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={startScanning}>
           <Text style={styles.buttonText}>SCAN QR CODE</Text>
         </TouchableOpacity>
       </View>
