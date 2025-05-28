@@ -78,9 +78,13 @@ const EventSection = React.memo(({ title, events, type }) => {
   const [activeTab, setActiveTab] = useState('upcoming');
   const router = useRouter();
 
-  const handleEventPress = useCallback((eventId) => {
-    router.push(`/events/${eventId}`);
-  }, [router]);
+  const handleEventPress = useCallback((eventId, index) => {
+    if (title === 'My Events') {
+      router.push('/events/imagineEvent');
+    } else {
+      router.push(`/events/${eventId}`);
+    }
+  }, [router, title]);
 
   const filteredEvents = useMemo(() => {
     if (type !== 'myEvents') return events;
@@ -151,14 +155,14 @@ const EventSection = React.memo(({ title, events, type }) => {
         </View>
       )}
       
-      {isExpanded && filteredEvents.map((event) => (
+      {isExpanded && filteredEvents.map((event, idx) => (
         <EventCard 
           key={event.id} 
           title={event.name}
           date={event.date}
           location={event.address}
           status={type === 'myEvents' ? (new Date(event.date) > new Date() ? 'upcoming' : 'completed') : undefined}
-          onPress={() => handleEventPress(event.id)}
+          onPress={() => handleEventPress(event.id, idx)}
           image={event.image}
         />
       ))}

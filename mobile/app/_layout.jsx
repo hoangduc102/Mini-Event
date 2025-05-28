@@ -8,13 +8,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initSentry } from "../config/sentry.js";
 import * as Sentry from '@sentry/react-native';
 import * as SplashScreen from 'expo-splash-screen';
-import SplashModule from '../config/SplashModule.js';
+import SplashModule from '../config/splashModule.js';
 
 // Khởi tạo Sentry sớm nhất có thể
 initSentry();
 
 // Đảm bảo splash screen không tự động ẩn
-SplashScreen.preventAutoHideAsync().catch(() => {
+SplashModule.internalPreventAutoHideAsync().catch(() => {
   /* ignore error */
 });
 
@@ -36,7 +36,7 @@ const RootLayoutBase = () => {
         // Đợi một chút trước khi ẩn splash screen
         setTimeout(async () => {
           try {
-            await SplashScreen.hideAsync();
+            await SplashModule.internalMaybeHideAsync();
           } catch (e) {
             console.warn('Error hiding splash screen:', e);
           }

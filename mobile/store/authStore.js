@@ -23,11 +23,18 @@ const refreshTokenUtil = async () => {
   try {
     const refreshToken = await AsyncStorage.getItem('refreshToken');
     if (!refreshToken) {
+      console.warn('No refresh token found in AsyncStorage');
       throw new Error('No refresh token found');
     }
 
+    if (!FIREBASE_API_KEY) {
+      console.error('FIREBASE_API_KEY is not defined');
+      throw new Error('Firebase API key is not configured');
+    }
+
+    console.log('Attempting to refresh token...');
     const response = await axios.post(
-      `https://securetoken.googleapis.com/v1/token?key=${FIREBASE_APIKEY}`,
+      `https://securetoken.googleapis.com/v1/token?key=${FIREBASE_API_KEY}`,
       `grant_type=refresh_token&refresh_token=${refreshToken}`,
       {
         headers: {
@@ -37,15 +44,21 @@ const refreshTokenUtil = async () => {
     );
 
     if (!response.data.id_token) {
+      console.error('Invalid refresh token response:', response.data);
       throw new Error('Invalid refresh token response');
     }
 
+    console.log('Token refresh successful');
     await AsyncStorage.setItem('token', response.data.id_token);
     await AsyncStorage.setItem('refreshToken', response.data.refresh_token);
 
     return response.data.id_token;
   } catch (error) {
-    throw new Error('Failed to refresh token');
+    console.error('Token refresh failed:', error.message);
+    if (error.response) {
+      console.error('Error response:', error.response.data);
+    }
+    throw new Error('Failed to refresh token: ' + error.message);
   }
 };
 

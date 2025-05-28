@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEventStore } from '../../store/eventStore';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../../assets/styles/event.styles';
+import TicketModal from './TicketModal';
 
 const COLORS = {
   primary: '#4F46E5',
@@ -63,6 +64,8 @@ export default function EventDetail() {
   const [eventDetail, setEventDetail] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const { getEventDetail, isLoading, error } = useEventStore();
+  const [showTicket, setShowTicket] = useState(false);
+  const user = { name: 'Indriyani Puspita', phone: '0987654321' };
 
   useEffect(() => {
     const loadEventDetail = async () => {
@@ -95,9 +98,9 @@ export default function EventDetail() {
     try {
       const result = await useEventStore.getState().registerEvent(id);
       if (result.success) {
-        // Xử lý khi đăng ký thành công
-        console.log('Đăng ký thành công:', result.data);
+        setShowTicket(true);
       } else {
+        setShowTicket(true);
         console.error('Đăng ký thất bại:', result.error);
       }
     } catch (error) {
@@ -231,6 +234,12 @@ export default function EventDetail() {
           <Text style={styles.getTicketText}>ĐĂNG KÝ THAM GIA</Text>
         </TouchableOpacity>
       </View>
+      <TicketModal
+        visible={showTicket}
+        onClose={() => setShowTicket(false)}
+        eventDetail={eventDetail}
+        user={user}
+      />
     </SafeAreaView>
   );
 } 
