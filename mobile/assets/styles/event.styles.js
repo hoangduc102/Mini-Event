@@ -37,13 +37,16 @@ export const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: 'white',
-    borderBottomColor: '#f5f5f5',
-    borderBottomWidth: 1,
-    marginTop: Platform.OS === 'ios' ? 32 : -5,
-    position: 'relative'
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    ...shadow,
   },
   headerButton: {
     width: 40,
@@ -70,8 +73,12 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   backButton: {
-    marginRight: 16,
-    padding: 4,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   eventCard: {
     flexDirection: 'row',
@@ -233,7 +240,7 @@ export const styles = StyleSheet.create({
   // Event Detail Styles
   eventDetailImage: {
     width: '100%',
-    height: 250,
+    height: 300,
     resizeMode: 'cover',
   },
   eventDetailContent: {
@@ -362,16 +369,12 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
   },
   favoriteButton: {
-    position: 'absolute',
-    right: 16,
-    top: 12,
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadow,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   backButton: {
     width: 40,
@@ -486,5 +489,8 @@ export const styles = StyleSheet.create({
     marginHorizontal: 5,
     flexDirection: 'row',
     justifyContent: 'center',
+  },
+  content: {
+    flex: 1,
   },
 }); 

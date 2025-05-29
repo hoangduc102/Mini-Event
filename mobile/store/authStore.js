@@ -758,5 +758,123 @@ export const useAuthStore = create((set, get) => ({
         error: error.message
       };
     }
+  },
+  searchUserByPhone: async (phone) => {
+    try {
+      const token = get().token;
+      if (!token) {
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để tìm kiếm người dùng'
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/users/search?phone=${phone}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Lỗi khi tìm kiếm người dùng: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      if (responseData.status !== 200) {
+        throw new Error(responseData.message || "Có lỗi xảy ra");
+      }
+
+      return {
+        success: true,
+        data: responseData.data || []
+      };
+    } catch (error) {
+      console.error('Error in searchUserByPhone:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  addUserToEvent: async (eventId, phoneNumber) => {
+    try {
+      const token = get().token;
+      if (!token) {
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để thêm người dùng'
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/users/events/${eventId}/add?phoneNumber=${phoneNumber}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Lỗi khi thêm người dùng: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      if (responseData.status !== 200) {
+        throw new Error(responseData.message || "Có lỗi xảy ra");
+      }
+
+      return {
+        success: true,
+        data: responseData.data
+      };
+    } catch (error) {
+      console.error('Error in addUserToEvent:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  removeUserFromEvent: async (eventId, phoneNumber) => {
+    try {
+      const token = get().token;
+      if (!token) {
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để xóa người dùng'
+        };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/users/events/${eventId}/remove?phoneNumber=${phoneNumber}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Lỗi khi xóa người dùng: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      if (responseData.status !== 200) {
+        throw new Error(responseData.message || "Có lỗi xảy ra");
+      }
+
+      return {
+        success: true,
+        data: responseData.data
+      };
+    } catch (error) {
+      console.error('Error in removeUserFromEvent:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 }));

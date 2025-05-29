@@ -48,7 +48,7 @@ const StatusBadge = React.memo(({ status }) => (
   </View>
 ));
 
-const EventCard = React.memo(({ title, date, location, status, onPress, image }) => {
+const EventCard = React.memo(({ title, date, location, status, onPress, image, buttonText = 'VIEW' }) => {
   const formattedDate = useMemo(() => formatDateString(date), [date]);
   
   return (
@@ -67,7 +67,7 @@ const EventCard = React.memo(({ title, date, location, status, onPress, image })
         </View>
       </View>
       <TouchableOpacity style={styles.showDetailButton} onPress={onPress}>
-        <Text style={styles.showDetailText}>VIEW</Text>
+        <Text style={styles.showDetailText}>{buttonText}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -166,8 +166,9 @@ const EventSection = React.memo(({ title, events, type }) => {
           date={event.date}
           location={event.address}
           status={type === 'myEvents' ? (new Date(event.date) > new Date() ? 'upcoming' : 'completed') : undefined}
-           onPress={() => handleEventPress(event, idx)}
+          onPress={() => handleEventPress(event, idx)}
           image={event.image}
+          buttonText={type === 'attended' ? 'GET TICKET' : 'VIEW'}
         />
       ))}
     </View>

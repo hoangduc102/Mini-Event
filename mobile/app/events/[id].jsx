@@ -235,7 +235,7 @@ export default function EventDetail() {
           <Ionicons name="call-outline" size={24} color="#1a1a1a" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.getTicketButton} onPress={handleGetTicket}>
-          <Text style={styles.getTicketText}>ĐĂNG KÝ THAM GIA</Text>
+          <Text style={styles.getTicketText}>GET TICKET</Text>
         </TouchableOpacity>
       </View>
       <TicketModal

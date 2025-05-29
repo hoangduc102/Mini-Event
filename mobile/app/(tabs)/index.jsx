@@ -6,7 +6,7 @@ import { Link, useRouter } from 'expo-router';
 import { SvgUri } from 'react-native-svg';
 import styles from '../../assets/styles/home.styles';
 import COLORS from '../../constants/colors';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export default function Home() {
   const { user, getEvents, token } = useAuthStore();
@@ -59,6 +59,13 @@ export default function Home() {
 
   const displayedEvents = showAllEvents ? events : events.slice(0, 2);
   const hotEvents = events.slice(0, 3); // Lấy 3 sự kiện đầu tiên làm hot events
+
+  const handleEventPress = useCallback((eventId) => {
+    router.push({
+      pathname: `/events/${eventId}`,
+      params: { id: eventId }
+    });
+  }, [router]);
 
   if (isLoading) {
     return (
@@ -153,7 +160,7 @@ export default function Home() {
                       <View style={styles.eventBottomContent}>
                         <TouchableOpacity 
                           style={styles.joinButton}
-                          onPress={() => router.push(`/event/${event.id}`)}
+                          onPress={() => handleEventPress(event.id)}
                         >
                           <Text style={styles.joinButtonText}>Tham Gia</Text>
                         </TouchableOpacity>
@@ -186,7 +193,7 @@ export default function Home() {
             <TouchableOpacity 
               key={event.id} 
               style={styles.upcomingEventCard}
-              onPress={() => router.push(`/event/${event.id}`)}
+              onPress={() => handleEventPress(event.id)}
             >
               <View style={styles.upcomingEventDate}>
                 <Text style={styles.upcomingEventDay}>{formattedEvent.day}</Text>
