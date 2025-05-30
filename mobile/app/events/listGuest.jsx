@@ -25,6 +25,7 @@ export default function GuestList() {
     if (result.success) {
       const mapped = result.data.map((item) => ({
         id: item.appUserDTO.id,
+        name: item.appUserDTO.username,
         phone: item.appUserDTO.phone,
         status: item.stateType
       }));
@@ -272,7 +273,7 @@ export default function GuestList() {
                   <Ionicons name="person" size={24} color="#666" />
                 </View>
                 <View style={styles.guestInfo}>
-                  <Text style={styles.guestName}>{guest.phone}</Text>
+                  <Text style={styles.guestName}>{guest.name}</Text>
                   <View style={styles.statusRow}>
                     <Text style={styles.statusText(statusColor(guest.status))}>{guest.status}</Text>
                     <Ionicons

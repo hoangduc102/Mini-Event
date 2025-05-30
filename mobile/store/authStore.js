@@ -773,11 +773,12 @@ export const useAuthStore = create((set, get) => ({
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        method: 'GET'
       });
-
+      
       if (!response.ok) {
-        throw new Error(`Lỗi khi tìm kiếm người dùng: ${response.status}`);
+        throw new Error(`Lỗi khi tìm kiếm người dùng: ${response.data}`);
       }
 
       const responseData = await response.json();
