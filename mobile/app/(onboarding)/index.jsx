@@ -17,20 +17,20 @@ export default function Onboarding() {
     {
       id: 1,
       image: require('../../assets/images/onboarding1.png'),
-      title: 'Khám phá sự kiện',
-      description: 'Tìm và tham gia các sự kiện thú vị xung quanh bạn. Kết nối với cộng đồng có cùng sở thích.'
+      title: 'Discover Events',
+      description: 'Find and join exciting events around you. Connect with communities sharing your interests.'
     },
     {
       id: 2,
       image: require('../../assets/images/onboarding2.png'),
-      title: 'Tạo & Quản lý',
-      description: 'Dễ dàng tạo và quản lý sự kiện của riêng bạn. Theo dõi số người tham gia và phản hồi.'
+      title: 'Create & Manage',
+      description: 'Easily create and manage your own events. Track participants and feedback.'
     },
     {
       id: 3,
       image: require('../../assets/images/onboarding3.png'),
-      title: 'Kết nối cộng đồng',
-      description: 'Chia sẻ trải nghiệm, đánh giá và kết nối với những người có cùng đam mê.'
+      title: 'Connect Communities',
+      description: 'Share experiences, reviews and connect with people who share your passion.'
     }
   ];
 
@@ -130,18 +130,18 @@ export default function Onboarding() {
           {currentIndex < slides.length - 1 ? (
             <>
               <TouchableOpacity onPress={handleSkip}>
-                <Text style={styles.skipButton}>Bỏ qua</Text>
+                <Text style={styles.skipButton}>Skip</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.nextButton} 
                 onPress={handleNext}
               >
-                <Text style={styles.nextButtonText}>Tiếp tục</Text>
+                <Text style={styles.nextButtonText}>Continue</Text>
               </TouchableOpacity>
             </>
           ) : (
             <TouchableOpacity style={styles.startButton} onPress={handleGetStarted}>
-              <Text style={styles.startButtonText}>Bắt đầu ngay</Text>
+              <Text style={styles.startButtonText}>Get Started</Text>
             </TouchableOpacity>
           )}
         </View>
