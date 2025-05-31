@@ -720,6 +720,43 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  checkinGPS: async (eventId, latitude,longitude) => {
+    try {
+      const token = get().token;
+      if (!token) {
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để thực hiện check-in',
+        };
+      }
+      const res = await axios.post(
+        `${API_BASE_URL}/events/checkin/gps`,
+        {
+          userLatitude: latitude,
+          userLongitude: longitude,
+        },
+        {
+          params: { eventId },             
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 10_000,                   
+        }
+      );
+
+      return { success: true, data: res.data };
+    } catch (err) {
+      console.error('Check-in failed:', err.response?.data || err.message);
+      return {
+        success: false,
+        error:
+          err.response?.data?.message    // backend trả lời có message
+          ?? 'Lỗi check-in, vui lòng thử lại',
+      };
+    }
+  },
+
   getGuestList: async (eventId) => {
     try {
       const token = get().token;
@@ -878,4 +915,6 @@ export const useAuthStore = create((set, get) => ({
       };
     }
   }
+
+  
 }));

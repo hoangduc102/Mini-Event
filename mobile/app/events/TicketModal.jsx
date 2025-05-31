@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, Image, Alert } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../../assets/styles/event.styles';
+import * as Location from 'expo-location';
+import { useAuthStore } from '../../store/authStore';
+import Toast from 'react-native-toast-message'; // ✅ thêm dòng này
 
-// Hàm format ngày
 const formatDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -14,43 +16,73 @@ const formatDate = (dateString) => {
   });
 };
 
-// Hàm format giờ
 const formatTime = (dateString) => {
   if (!dateString) return '9:00 PM';
-  
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '9:00 PM';
-    
     const hours = date.getHours();
     const minutes = date.getMinutes();
     const period = hours >= 12 ? 'PM' : 'AM';
     const hour12 = hours % 12 || 12;
-    
-    const formattedTime = `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
-    console.log('Original date:', dateString, 'Formatted time:', formattedTime);
-    return formattedTime;
-  } catch (error) {
-    console.error('Error formatting time:', error);
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+  } catch {
     return '9:00 PM';
   }
 };
 
-export default function TicketModal({ visible, onClose, eventDetail, user, qrImage  }) {
+export default function TicketModal({ visible, onClose, eventDetail, user, qrImage }) {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const { checkinGPS } = useAuthStore();
 
-  const handleGPSCheck = () => {
-    // Giả lập việc check GPS location
-    Alert.alert(
-      "Check-in thành công",
-      "Bạn đã check-in thành công tại sự kiện!",
-      [{ text: "OK" }]
-    );
-    setIsCheckedIn(true);
+  const handleGPSCheck = async () => {
+    try {
+      setIsChecking(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Toast.show({
+          type: 'error',
+          text1: 'Không có quyền vị trí',
+          text2: 'Bạn cần cho phép truy cập GPS để check-in.',
+          visibilityTime: 2000,
+        });
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+      console.log('Latitude:', latitude, 'Longitude:', longitude);
+      
+      const result = await checkinGPS(eventDetail.id, latitude, longitude);
+      if (result.success) {
+        Toast.show({
+          type: 'success',
+          text1: '✅ Check-in thành công!',
+          visibilityTime: 2000,
+        });
+        setIsCheckedIn(true);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: '❌ Check-in thất bại',
+          text2: result.error || 'Không thể check-in',
+          visibilityTime: 2000,
+        });
+      }
+    } catch (error) {
+      console.error('GPS Check-in error:', error);
+      Toast.show({
+        type: 'error',
+        text1: '⚠️ Lỗi hệ thống',
+        text2: 'Không thể lấy vị trí hoặc gửi check-in.',
+        visibilityTime: 2000,
+      });
+    } finally {
+      setIsChecking(false);
+    }
   };
 
   if (!eventDetail || !user) return null;
-  console.log('Event Detail:', eventDetail);
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
@@ -63,8 +95,6 @@ export default function TicketModal({ visible, onClose, eventDetail, user, qrIma
             <Ionicons name="heart" size={24} color="#A52A2A" />
           </TouchableOpacity>
 
-          {/* <View style={styles.ticketImagePlaceholder} /> */}
-          {/* Hiển thị mã QR thay vì placeholder */}
           {qrImage ? (
             <Image
               source={{ uri: qrImage }}
@@ -79,6 +109,7 @@ export default function TicketModal({ visible, onClose, eventDetail, user, qrIma
           <Text style={styles.ticketSubtitle}>
             {formatDate(eventDetail.date)} ~ {eventDetail.address}
           </Text>
+
           <View style={styles.ticketInfoRow}>
             <View>
               <Text style={styles.ticketLabel}>Tag</Text>
@@ -89,6 +120,7 @@ export default function TicketModal({ visible, onClose, eventDetail, user, qrIma
               <Text style={styles.ticketValue}>{user.phone}</Text>
             </View>
           </View>
+
           <View style={styles.ticketInfoRow}>
             <View>
               <Text style={styles.ticketLabel}>Date</Text>
@@ -99,26 +131,28 @@ export default function TicketModal({ visible, onClose, eventDetail, user, qrIma
               <Text style={styles.ticketValue}>{formatTime(eventDetail.date)}</Text>
             </View>
           </View>
-          <Text style={styles.ticketNote}>Scan your barcode at the entry gate.</Text>
+
+          <Text style={styles.ticketNote}>{isCheckedIn ? 'You have already checked in with GPS.' : 'Scan your barcode or use GPS to check in.'}</Text>
+
           <View style={styles.ticketButtonRow}>
             <TouchableOpacity style={styles.ticketActionButton} onPress={onClose}>
               <Text>Close</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.ticketActionButton,
                 isCheckedIn && { opacity: 0.5 }
-              ]} 
+              ]}
               onPress={handleGPSCheck}
-              disabled={isCheckedIn}
+              disabled={isCheckedIn || isChecking}
             >
               <Ionicons name="location-outline" size={18} />
               <Text> GPS Check</Text>
               {isCheckedIn && (
-                <Ionicons 
-                  name="checkmark-circle" 
-                  size={18} 
-                  color="green" 
+                <Ionicons
+                  name="checkmark-circle"
+                  size={18}
+                  color="green"
                   style={{ marginLeft: 5 }}
                 />
               )}
@@ -128,4 +162,4 @@ export default function TicketModal({ visible, onClose, eventDetail, user, qrIma
       </View>
     </Modal>
   );
-} 
+}
