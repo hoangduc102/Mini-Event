@@ -240,20 +240,10 @@ export default function Events() {
     setRefreshing(false);
   }, [resetEvents, loadAllEvents, token, user, router]);
 
-  const handleBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.headerButton}
-            onPress={handleBack}
-          >
-            <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
-          </TouchableOpacity>
           <Text style={styles.headerTitle}>Events</Text>
         </View>
         <View style={styles.centerContainer}>
@@ -269,12 +259,6 @@ export default function Events() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={handleBack}
-        >
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Events</Text>
       </View>
 

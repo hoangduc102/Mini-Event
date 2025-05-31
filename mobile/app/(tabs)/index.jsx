@@ -31,11 +31,11 @@ export default function Home() {
       if (result.success && result.data) {
         setEvents(result.data);
       } else {
-        setError(result.error || 'Không thể tải danh sách sự kiện');
+        setError(result.error || 'Unable to load events list');
       }
     } catch (error) {
       console.error('Failed to load events:', error);
-      setError('Đã có lỗi xảy ra khi tải danh sách sự kiện');
+      setError('An error occurred while loading the events list');
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +80,7 @@ export default function Home() {
       <View style={[styles.container, styles.centerContent]}>
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={loadEvents}>
-          <Text style={styles.retryButtonText}>Thử lại</Text>
+          <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
@@ -108,8 +108,8 @@ export default function Home() {
             />
           )}
           <View style={styles.greetingContainer}>
-            <Text style={styles.greetingText}>Xin chào,</Text>
-            <Text style={styles.username} numberOfLines={1}>{user?.username || 'Khách'}</Text>
+            <Text style={styles.greetingText}>Hello,</Text>
+            <Text style={styles.username} numberOfLines={1}>{user?.username || 'Guest'}</Text>
             <Text style={styles.emoji}>👋</Text>
           </View>
         </View>
@@ -124,12 +124,12 @@ export default function Home() {
       {/* Hot Events Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Sự Kiện Nổi Bật</Text>
+          <Text style={styles.sectionTitle}>Featured Events</Text>
           <TouchableOpacity 
             style={styles.viewAllButton}
-            onPress={() => router.push('/search')}
+            onPress={() => router.push('../events/hotEvents')}
           >
-            <Text style={styles.viewAllText}>Xem Tất Cả</Text>
+            <Text style={styles.viewAllText}>View All</Text>
             <MaterialIcons name="arrow-forward-ios" size={14} color={COLORS.textSecondary} />
           </TouchableOpacity>
         </View>
@@ -162,7 +162,7 @@ export default function Home() {
                           style={styles.joinButton}
                           onPress={() => handleEventPress(event.id)}
                         >
-                          <Text style={styles.joinButtonText}>Tham Gia</Text>
+                          <Text style={styles.joinButtonText}>Join</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -177,12 +177,12 @@ export default function Home() {
       {/* Upcoming Events Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Sự Kiện Sắp Tới</Text>
+          <Text style={styles.sectionTitle}>Upcoming Events</Text>
           <TouchableOpacity 
             style={styles.viewAllButton}
-            onPress={() => router.push('/search')}
+            onPress={() => router.push('../events/upcomingEvents')}
           >
-            <Text style={styles.viewAllText}>Xem Tất Cả</Text>
+            <Text style={styles.viewAllText}>View All</Text>
             <MaterialIcons name="arrow-forward-ios" size={14} color="#666" />
           </TouchableOpacity>
         </View>
@@ -206,10 +206,6 @@ export default function Home() {
                   {' ' + formattedEvent.location}
                 </Text>
                 <View style={styles.upcomingEventStats}>
-                  {/* <Text style={styles.upcomingEventAttendees}>
-                    <Ionicons name="people-outline" size={14} color="#666" />
-                    {' ' + formattedEvent.attendees + ' Người tham gia'}
-                  </Text> */}
                   <Text style={styles.upcomingEventTime}>
                     <Ionicons name="time-outline" size={14} color="#666" />
                     {' ' + formattedEvent.time}
@@ -241,13 +237,13 @@ export default function Home() {
           style={styles.createEventGradient}
         >
           <View style={styles.createEventContent}>
-            <Text style={styles.createEventTitle}>Tạo Sự Kiện Của Bạn</Text>
+            <Text style={styles.createEventTitle}>Create Your Event</Text>
             <Text style={styles.createEventDescription}>
-              Bắt đầu lên kế hoạch cho sự kiện tuyệt vời tiếp theo
+              Start planning your next amazing event
             </Text>
             <TouchableOpacity style={styles.createEventButton}>
               <Link href='/create' asChild>
-                <Text style={styles.createEventButtonText}>Tạo Sự Kiện</Text>
+                <Text style={styles.createEventButtonText}>Create Event</Text>
               </Link>
               <MaterialIcons name="arrow-forward" size={20} color="#4A90E2" />
             </TouchableOpacity>
