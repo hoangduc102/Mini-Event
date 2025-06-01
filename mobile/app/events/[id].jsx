@@ -63,18 +63,19 @@ export default function EventDetail() {
   const router = useRouter();
   const [eventDetail, setEventDetail] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
-  const { getEventDetail, isLoading, error } = useEventStore();
+  const { getEventDetail, isLoading, error , setIsLoading} = useEventStore();
   const [showTicket, setShowTicket] = useState(false);
   const user = { name: 'Indriyani Puspita', phone: '0987654321' };
   const [qrImage, setQrImage] = useState(null);
   useEffect(() => {
     const loadEventDetail = async () => {
       if (!id) return;
-      
+      console.log('Event ID:', id);
       try {
         const result = await getEventDetail(id);
         if (result.success) {
           setEventDetail(result.data);
+          setIsLoading(false);
         } else {
           console.error('Failed to load event detail:', result.error);
         }
@@ -146,7 +147,7 @@ export default function EventDetail() {
     );
   }
 
-  if (!eventDetail) {
+  if (!eventDetail ) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>

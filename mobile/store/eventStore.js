@@ -129,6 +129,7 @@ export const useEventStore = create((set, get) => ({
   attendedError: null, // Thêm state riêng cho lỗi attended events
   retryCount: 0, // Thêm biến đếm số lần retry
 
+  setIsLoading: (isLoading) => set({ isLoading }),
   resetEvents: () => {
     set({
       myEvents: [],
@@ -414,7 +415,7 @@ export const useEventStore = create((set, get) => ({
         throw new Error('Không tìm thấy thông tin sự kiện');
       }
 
-      set({ isLoading: false, error: null });
+      // set({ isLoading: false, error: null });
 
       return { 
         success: true, 
