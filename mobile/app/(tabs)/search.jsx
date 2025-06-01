@@ -160,14 +160,14 @@ export default function Search() {
       return (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
-            Vui lòng đăng nhập để xem danh sách sự kiện
+            Please login to see the event list
           </Text>
           <TouchableOpacity 
             style={styles.loginButton}
             onPress={() => router.push('/login')}
             
           >
-            <Text style={styles.loginButtonText}>Đăng nhập</Text>
+            <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
         </View>
       );
@@ -184,7 +184,7 @@ export default function Search() {
     if (events.length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Chưa có sự kiện công khai nào</Text>
+          <Text style={styles.emptyText}>No public events found</Text>
         </View>
       );
     }
@@ -221,14 +221,9 @@ export default function Search() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Events</Text>
+      <View style={[styles.header, { justifyContent: 'space-between', alignItems: 'center' }]}>
+        <View style={{ width: 40 }} /> {/* Placeholder để cân bằng với nút filter */}
+        <Text style={styles.headerTitle}>Search</Text>
         <TouchableOpacity style={styles.headerButton}>
           <Ionicons name="filter" size={22} color="#1a1a1a" />
         </TouchableOpacity>
