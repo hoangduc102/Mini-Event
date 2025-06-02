@@ -186,9 +186,9 @@ export default function EventDetail() {
           <Text style={styles.eventDetailTitle}>{eventDetail.name}</Text>
           
           <View style={styles.eventDetailSection}>
-            <View style={styles.iconContainer}>
+            {/* <View style={styles.iconContainer}>
               <Ionicons name="calendar-outline" size={20} color={COLORS.secondary} />
-            </View>
+            </View> */}
             <View style={styles.sectionContent}>
               <Text style={styles.sectionLabel}>Thời gian</Text>
               <Text style={styles.eventDetailText}>
@@ -198,9 +198,9 @@ export default function EventDetail() {
           </View>
 
           <View style={styles.eventDetailSection}>
-            <View style={styles.iconContainer}>
+            {/* <View style={styles.iconContainer}>
               <Ionicons name="location-outline" size={20} color={COLORS.secondary} />
-            </View>
+            </View> */}
             <View style={styles.sectionContent}>
               <Text style={styles.sectionLabel}>Địa điểm</Text>
               <Text style={styles.eventDetailText}>

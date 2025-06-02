@@ -24,8 +24,8 @@ export default function Profile() {
       router.replace('/login');
     } else {
       Alert.alert(
-        "Lỗi",
-        result.error || "Không thể xóa tài khoản. Vui lòng thử lại sau."
+        "Error",
+        result.error || "Unable to delete account. Please try again later."
       );
     }
   };
@@ -113,7 +113,7 @@ export default function Profile() {
             onPress={logout}
           >
             <Ionicons name="log-out-outline" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Đăng xuất</Text>
+            <Text style={styles.buttonText}>Log Out</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -137,7 +137,7 @@ export default function Profile() {
             }}
           >
             <Ionicons name="trash-outline" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Xóa tài khoản</Text>
+            <Text style={styles.buttonText}>Delete Account</Text>
           </TouchableOpacity>
         </View>
 

@@ -1,76 +1,76 @@
 # MiniEvent Mobile App
 
-Ứng dụng di động cho dự án MiniEvent được xây dựng bằng React Native và Expo.
+Mobile application for the MiniEvent project built with React Native and Expo.
 
-## Yêu cầu hệ thống
+## System Requirements
 
-- Node.js (phiên bản 18 trở lên)
-- npm hoặc yarn
+- Node.js (version 18 or higher)
+- npm or yarn
 - Expo CLI
-- Android Studio (cho Android development)
-- Xcode (cho iOS development, chỉ trên macOS)
+- Android Studio (for Android development)
+- Xcode (for iOS development, macOS only)
 
-## Cài đặt
+## Installation
 
-1. Cài đặt các dependencies:
+1. Install dependencies:
 
 ```bash
 cd mobile
-npm install hoặc npm install --legacy-peer-deps nếu thấy có lỗi 
+npm install or npm install --legacy-peer-deps if you encounter any errors
 ```
 
-2. Cấu hình môi trường:
-- Tạo file `.env` trong thư mục `mobile` 
-- Điền các biến môi trường cần thiết (EXPO_PUBLIC_FIREBASE_APIKEY, EXPO_PUBLIC_IP_ADDRESS, EXPO_PUBLIC_SENTRY_AUTH_TOKEN, EXPO_PUBLIC_DNS_SENTRY )
+2. Environment configuration:
+- Create a `.env` file in the `mobile` directory
+- Fill in the required environment variables (EXPO_PUBLIC_FIREBASE_APIKEY, EXPO_PUBLIC_IP_ADDRESS, EXPO_PUBLIC_SENTRY_AUTH_TOKEN, EXPO_PUBLIC_DNS_SENTRY)
 
-## Chạy ứng dụng
+## Running the Application
 
-1. Khởi động backend server trước 
+1. Start the backend server first
 
-2. Chạy ứng dụng mobile:
+2. Run the mobile app:
 
 ```bash
-npx expo 
+npx expo
 ```
 
-Sau khi chạy lệnh trên, bạn có thể:
-- Quét mã QR bằng ứng dụng Expo Go trên điện thoại
-- Nhấn 'a' để mở trên Android emulator
-- Nhấn 'i' để mở trên iOS simulator (chỉ trên macOS)
+After running the above command, you can:
+- Scan the QR code using the Expo Go app on your phone
+- Press 'a' to open on Android emulator
+- Press 'i' to open on iOS simulator (macOS only)
 
-## Cấu trúc dự án
+## Project Structure
 
 ```
 mobile/
-├── app/              # Chứa các màn hình và navigation (Expo Router)
-├── assets/          # Images, fonts và các tài nguyên khác
-├── components/      # Các component tái sử dụng
-├── config/         # Cấu hình ứng dụng
-├── constants/      # Các hằng số và theme
+├── app/              # Contains screens and navigation (Expo Router)
+├── assets/          # Images, fonts and other resources
+├── components/      # Reusable components
+├── config/         # Application configuration
+├── constants/      # Constants and theme
 ├── store/          # State management (Redux/Context)
-├── app.json        # Cấu hình Expo
-├── eas.json        # Cấu hình EAS Build
-├── babel.config.js # Cấu hình Babel
-└── tsconfig.json   # Cấu hình TypeScript
+├── app.json        # Expo configuration
+├── eas.json        # EAS Build configuration
+├── babel.config.js # Babel configuration
+└── tsconfig.json   # TypeScript configuration
 ```
 
-## Tính năng chính
+## Main Features
 
-- Đăng nhập/Đăng ký
-- Quản lý sự kiện
-- Thông báo realtime
-- Tích hợp Firebase
-- Và nhiều tính năng khác...
+- Login/Registration
+- Event Management
+- Realtime Notifications
+- Firebase Integration
+- And many more features...
 
-## Liên kết hữu ích
+## Useful Links
 
 - [Expo Documentation](https://docs.expo.dev/)
 - [React Native Documentation](https://reactnative.dev/docs/getting-started)
 - [Firebase Documentation](https://firebase.google.com/docs)
 
-## Hỗ trợ
+## Support
 
-Nếu bạn gặp vấn đề hoặc cần hỗ trợ, vui lòng:
-1. Kiểm tra [issues](https://github.com/hoangduc102/issues)
-2. Tạo issue mới nếu cần
-3. Liên hệ team development
+If you encounter any issues or need support, please:
+1. Check [issues](https://github.com/hoangduc102/issues)
+2. Create a new issue if needed
+3. Contact the development team

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { initSentry } from "../config/sentry.js";
 import * as Sentry from '@sentry/react-native';
-import SplashModule from '../config/SplashModule.js';
+import SplashModule from '../config/splashModule.js';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../../assets/styles/event.styles';
@@ -31,12 +31,29 @@ const formatTime = (dateString) => {
 };
 
 export default function TicketModal({ visible, onClose, eventDetail, user, qrImage }) {
-  const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
-  const { checkinGPS } = useAuthStore();
+  const { checkinGPS, isEventCheckedIn, loadCheckedInEvents } = useAuthStore();
+
+  // Load trạng thái check-in khi component mount
+  useEffect(() => {
+    if (visible && eventDetail?.id) {
+      loadCheckedInEvents();
+    }
+  }, [visible, eventDetail?.id]);
 
   const handleGPSCheck = async () => {
     try {
+      // Kiểm tra xem đã check-in chưa
+      if (isEventCheckedIn(eventDetail.id)) {
+        Toast.show({
+          type: 'info',
+          text1: 'Thông báo',
+          text2: 'Bạn đã check-in sự kiện này rồi',
+          visibilityTime: 2000,
+        });
+        return;
+      }
+
       setIsChecking(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -51,7 +68,6 @@ export default function TicketModal({ visible, onClose, eventDetail, user, qrIma
 
       const location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
-      console.log('Latitude:', latitude, 'Longitude:', longitude);
       
       const result = await checkinGPS(eventDetail.id, latitude, longitude);
       if (result.success) {
@@ -60,7 +76,6 @@ export default function TicketModal({ visible, onClose, eventDetail, user, qrIma
           text1: '✅ Check-in thành công!',
           visibilityTime: 2000,
         });
-        setIsCheckedIn(true);
       } else {
         Toast.show({
           type: 'error',
@@ -132,23 +147,27 @@ export default function TicketModal({ visible, onClose, eventDetail, user, qrIma
             </View>
           </View>
 
-          <Text style={styles.ticketNote}>{isCheckedIn ? 'You have already checked in with GPS.' : 'Scan your barcode or use GPS to check in.'}</Text>
+          <Text style={styles.ticketNote}>
+            {isEventCheckedIn(eventDetail.id) 
+              ? 'Bạn đã check-in sự kiện này rồi.' 
+              : 'Quét mã QR hoặc sử dụng GPS để check-in.'}
+          </Text>
 
           <View style={styles.ticketButtonRow}>
             <TouchableOpacity style={styles.ticketActionButton} onPress={onClose}>
-              <Text>Close</Text>
+              <Text>Đóng</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.ticketActionButton,
-                isCheckedIn && { opacity: 0.5 }
+                isEventCheckedIn(eventDetail.id) && { opacity: 0.5 }
               ]}
               onPress={handleGPSCheck}
-              disabled={isCheckedIn || isChecking}
+              disabled={isEventCheckedIn(eventDetail.id) || isChecking}
             >
               <Ionicons name="location-outline" size={18} />
               <Text> GPS Check</Text>
-              {isCheckedIn && (
+              {isEventCheckedIn(eventDetail.id) && (
                 <Ionicons
                   name="checkmark-circle"
                   size={18}

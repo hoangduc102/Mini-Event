@@ -32,7 +32,7 @@ export default function GuestList() {
       setGuests(mapped);
     } else {
       console.error('Lỗi lấy danh sách khách:', result.error);
-      Alert.alert('Lỗi', 'Không thể lấy danh sách khách mời');
+      Alert.alert('Error', 'Không thể lấy danh sách khách mời');
     }
     setLoading(false);
   };
@@ -57,7 +57,7 @@ export default function GuestList() {
       });
       setSearchResults(processedResults);
     } else {
-      Alert.alert('Lỗi', result.error || 'Không thể tìm kiếm người dùng');
+      Alert.alert('Error', result.error || 'Unable to search for users');
     }
   };
 
@@ -73,7 +73,7 @@ export default function GuestList() {
 
   const handleSendInvitations = async () => {
     if (selectedUsers.length === 0) {
-      Alert.alert('Thông báo', 'Vui lòng chọn ít nhất một người dùng');
+      Alert.alert('Notification', 'Please select at least one user');
       return;
     }
 
@@ -96,11 +96,11 @@ export default function GuestList() {
     setSearchQuery('');
 
     if (successCount > 0) {
-      Alert.alert('Thành công', `Đã thêm ${successCount} người dùng vào sự kiện`);
+      Alert.alert('Success', `Added ${successCount} users to the event`);
       fetchGuestList();
     }
     if (failCount > 0) {
-      Alert.alert('Lỗi', `Không thể thêm ${failCount} người dùng`);
+      Alert.alert('Error', `Unable to add ${failCount} users`);
     }
   };
 

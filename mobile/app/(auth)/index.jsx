@@ -16,20 +16,20 @@ export default function Login() {
   const handleLogin = async () => {
     // Kiểm tra input
     if (!email || !password) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ email và mật khẩu');
+      Alert.alert('Error', 'Please enter both email and password');
       return;
     }
 
     // Kiểm tra định dạng email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Lỗi', 'Email không hợp lệ');
+      Alert.alert('Error', 'Invalid email format');
       return;
     }
 
     const result = await login(email, password);
     if(!result.success) {
-      Alert.alert('Lỗi', result.error);
+      Alert.alert('Error', result.error);
     }
   }
   

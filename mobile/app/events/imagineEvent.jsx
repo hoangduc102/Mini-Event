@@ -40,15 +40,15 @@ export default function ImagineEvent() {
       const result = await checkinQrCode(event.id, data);
       Toast.show({
         type: result.success ? 'success' : 'error',
-        text1: result.success ? '✅ Check-in thành công!' : '❌ Check-in thất bại',
+        text1: result.success ? '✅ Check-in successful!' : '❌ Check-in failed',
         text2: result.error || '',
         visibilityTime: 1500,
       });
     } catch (error) {
       Toast.show({
         type: 'error',
-        text1: '⚠️ Lỗi kết nối',
-        text2: error.message || 'Vui lòng thử lại sau',
+        text1: '⚠️ Connection error',
+        text2: error.message || 'Please try again later',
         visibilityTime: 1500,
       });
     } finally {
@@ -62,7 +62,7 @@ export default function ImagineEvent() {
     if (!permission?.granted) {
       const result = await requestPermission();
       if (!result.granted) {
-        alert('Cần quyền truy cập camera để quét mã QR');
+        alert('Camera permission is required to scan QR code');
         return;
       }
     }
@@ -176,7 +176,7 @@ export default function ImagineEvent() {
         <View style={styles.descriptionContainer}>
           <Text style={styles.sectionTitle}>Description</Text>
           <Text style={styles.descriptionText} numberOfLines={showFullDesc ? undefined : 3}>
-            {event.description || 'Không có mô tả'}
+            {event.description || 'No description available'}
           </Text>
           <TouchableOpacity onPress={() => setShowFullDesc(v => !v)}>
             <Text style={styles.readMore}>{showFullDesc ? 'Show Less' : 'Read More'}</Text>

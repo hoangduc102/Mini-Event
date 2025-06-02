@@ -91,15 +91,15 @@ export default function Search() {
   const onRefresh = useCallback(async () => {
     if (!token || !user) {
       Alert.alert(
-        'Thông báo',
-        'Vui lòng đăng nhập để xem danh sách sự kiện',
+        'Notification',
+        'Please log in to view the event list',
         [
           { 
-            text: 'Đăng nhập', 
+            text: 'Log in', 
             onPress: () => router.push('/login') 
           },
           { 
-            text: 'Hủy', 
+            text: 'Cancel', 
             style: 'cancel' 
           }
         ]
@@ -193,7 +193,7 @@ export default function Search() {
       return (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
-            Không tìm thấy sự kiện công khai nào phù hợp với từ khóa "{searchQuery}"
+            No public events found matching "{searchQuery}"
           </Text>
         </View>
       );
@@ -203,7 +203,7 @@ export default function Search() {
       <>
         {searchQuery && filteredEvents.length > 0 && (
           <Text style={styles.resultText}>
-            {filteredEvents.length} sự kiện công khai được tìm thấy
+            {filteredEvents.length} public events found
           </Text>
         )}
         {(searchQuery ? filteredEvents : events).map((event) => (
@@ -232,7 +232,7 @@ export default function Search() {
       <SearchInput 
         value={searchQuery}
         onChangeText={setSearchQuery}
-        placeholder="Tìm kiếm sự kiện..."
+        placeholder="Search events..."
       />
       
       <ScrollView 
@@ -262,7 +262,7 @@ export default function Search() {
       >
         {searchQuery && events.length > 0 ? (
           <Text style={styles.resultText}>
-            {filteredEvents.length} kết quả được tìm thấy
+            {filteredEvents.length} results found
           </Text>
         ) : null}
         

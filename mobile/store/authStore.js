@@ -103,6 +103,7 @@ export const useAuthStore = create((set, get) => ({
   hasMoreEvents: true,
   pageSize: 10,
   isLoadingMore: false,
+  checkedInEvents: new Set(),
 
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
@@ -720,7 +721,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  checkinGPS: async (eventId, latitude,longitude) => {
+  checkinGPS: async (eventId, latitude, longitude) => {
     try {
       const token = get().token;
       if (!token) {
@@ -729,6 +730,15 @@ export const useAuthStore = create((set, get) => ({
           error: 'Vui lòng đăng nhập để thực hiện check-in',
         };
       }
+
+      // Kiểm tra xem đã check-in chưa
+      if (get().checkedInEvents.has(eventId)) {
+        return {
+          success: true,
+          data: { message: 'Bạn đã check-in sự kiện này rồi' }
+        };
+      }
+
       const res = await axios.post(
         `${API_BASE_URL}/events/checkin/gps`,
         {
@@ -745,15 +755,46 @@ export const useAuthStore = create((set, get) => ({
         }
       );
 
+      // Nếu check-in thành công, thêm vào danh sách đã check-in
+      if (res.data.status === 200) {
+        set(state => ({
+          checkedInEvents: new Set([...state.checkedInEvents, eventId])
+        }));
+      }
+
       return { success: true, data: res.data };
     } catch (err) {
       console.error('Check-in failed:', err.response?.data || err.message);
       return {
         success: false,
-        error:
-          err.response?.data?.message    // backend trả lời có message
-          ?? 'Lỗi check-in, vui lòng thử lại',
+        error: err.response?.data?.message ?? 'Lỗi check-in, vui lòng thử lại',
       };
+    }
+  },
+
+  // Thêm hàm kiểm tra trạng thái check-in
+  isEventCheckedIn: (eventId) => {
+    return get().checkedInEvents.has(eventId);
+  },
+
+  // Thêm hàm để load trạng thái check-in từ server khi khởi động app
+  loadCheckedInEvents: async () => {
+    try {
+      const token = get().token;
+      if (!token) return;
+
+      const response = await axios.get(`${API_BASE_DIR}/events/checked-in`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.data.status === 200 && Array.isArray(response.data.data)) {
+        set({ checkedInEvents: new Set(response.data.data) });
+      }
+    } catch (error) {
+      console.error('Error loading checked-in events:', error);
     }
   },
 
@@ -802,7 +843,7 @@ export const useAuthStore = create((set, get) => ({
       if (!token) {
         return {
           success: false,
-          error: 'Vui lòng đăng nhập để tìm kiếm người dùng'
+          error: 'Please login to search for users'
         };
       }
 
@@ -815,12 +856,12 @@ export const useAuthStore = create((set, get) => ({
       });
       
       if (!response.ok) {
-        throw new Error(`Lỗi khi tìm kiếm người dùng: ${response.data}`);
+        throw new Error(`Error searching for user: ${response.data}`);
       }
 
       const responseData = await response.json();
       if (responseData.status !== 200) {
-        throw new Error(responseData.message || "Có lỗi xảy ra");
+        throw new Error(responseData.message || "An error occurred");
       }
 
       return {

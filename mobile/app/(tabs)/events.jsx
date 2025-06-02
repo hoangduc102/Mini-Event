@@ -48,11 +48,15 @@ const StatusBadge = React.memo(({ status }) => (
   </View>
 ));
 
-const EventCard = React.memo(({ title, date, location, status, onPress, image, buttonText = 'VIEW' }) => {
+const EventCard = React.memo(({ title, date, location, status, onPress, image, type }) => {
   const formattedDate = useMemo(() => formatDateString(date), [date]);
   
   return (
-    <View style={styles.eventCard}>
+    <TouchableOpacity 
+      style={styles.eventCard}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Image 
         source={image ? { uri: image } : require('../../assets/images/App-logo.png')}
         style={styles.eventImage}
@@ -66,10 +70,16 @@ const EventCard = React.memo(({ title, date, location, status, onPress, image, b
           <Text style={styles.locationText} numberOfLines={1}>{location}</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.showDetailButton} onPress={onPress}>
-        <Text style={styles.showDetailText}>{buttonText}</Text>
-      </TouchableOpacity>
-    </View>
+      {type === 'attended' ? (
+        <View style={styles.iconContainer}>
+          <Ionicons name="eye-outline" size={24} color={COLORS.primary} />
+        </View>
+      ) : (
+        <TouchableOpacity style={styles.showDetailButton} onPress={onPress}>
+          <Text style={styles.showDetailText}>VIEW</Text>
+        </TouchableOpacity>
+      )}
+    </TouchableOpacity>
   );
 });
 
@@ -168,7 +178,7 @@ const EventSection = React.memo(({ title, events, type }) => {
           status={type === 'myEvents' ? (new Date(event.date) > new Date() ? 'upcoming' : 'completed') : undefined}
           onPress={() => handleEventPress(event, idx)}
           image={event.image}
-          buttonText={type === 'attended' ? 'GET TICKET' : 'VIEW'}
+          type={type}
         />
       ))}
     </View>
@@ -240,10 +250,20 @@ export default function Events() {
     setRefreshing(false);
   }, [resetEvents, loadAllEvents, token, user, router]);
 
+  const handleBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={handleBack}
+          >
+            <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Events</Text>
         </View>
         <View style={styles.centerContainer}>
@@ -259,6 +279,12 @@ export default function Events() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={handleBack}
+        >
+          <Ionicons name="chevron-back" size={24} color="#1a1a1a" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Events</Text>
       </View>
 

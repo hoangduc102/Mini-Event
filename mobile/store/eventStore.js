@@ -70,24 +70,24 @@ const getErrorMessage = (error) => {
     // Server trả về response với status code nằm ngoài range 2xx
     switch (error.response.status) {
       case 400:
-        return 'Yêu cầu không hợp lệ';
+        return 'Invalid request';
       case 401:
-        return 'Phiên đăng nhập đã hết hạn';
+        return 'Session expired';
       case 403:
-        return 'Bạn không có quyền truy cập';
+        return 'Access denied';
       case 404:
         return null; // Trường hợp chưa tham gia event nào
       case 500:
-        return 'Lỗi hệ thống, vui lòng thử lại sau';
+        return 'System error, please try again later';
       default:
-        return error.response.data?.message || 'Đã có lỗi xảy ra';
+        return error.response.data?.message || 'An error occurred';
     }
   } else if (error.request) {
     // Request đã được gửi nhưng không nhận được response
-    return 'Không thể kết nối đến server';
+    return 'Cannot connect to server';
   } else {
     // Có lỗi khi setup request
-    return 'Đã có lỗi xảy ra, vui lòng thử lại';
+    return 'An error occurred, please try again';
   }
 };
 
@@ -213,7 +213,7 @@ export const useEventStore = create((set, get) => ({
   getAttendedEvents: async (isRetry = false) => {
     try {
       if (isRetry && get().retryCount >= 3) {
-        throw new Error('Không thể tải dữ liệu sau nhiều lần thử');
+        throw new Error('Unable to load data after multiple attempts');
       }
 
       set({
@@ -401,17 +401,17 @@ export const useEventStore = create((set, get) => ({
       });
 
       if (response.status === 404) {
-        throw new Error('Sự kiện không tồn tại');
+        throw new Error('Event does not exist');
       }
 
       if (!response.data || response.data.status !== 200) {
-        throw new Error(response.data?.message || 'Không thể lấy thông tin sự kiện');
+        throw new Error(response.data?.message || 'Unable to get event information');
       }
 
       // Tìm sự kiện có id trùng khớp
       const eventDetail = response.data.data?.find(event => event.id === eventId);
       if (!eventDetail) {
-        throw new Error('Không tìm thấy thông tin sự kiện');
+        throw new Error('Event information not found');
       }
 
       set({ isLoading: false, error: null });
